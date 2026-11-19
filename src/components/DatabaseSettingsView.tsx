@@ -132,9 +132,9 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
           </p>
         </div>
         <div className="space-y-1">
-          <div className="font-bold text-blue-800">3. ربط التطبيق أونلاين</div>
+          <div className="font-bold text-blue-800">3. الربط والنشر على GitHub Pages</div>
           <p className="text-slate-700 leading-relaxed">
-            بعد تشغيل الـ SQL، انسخ <span className="font-mono-num">Project URL</span> و <span className="font-mono-num">Anon Key</span> من إعدادات Supabase وضعهما هنا للحفظ السحابي الدائم.
+            أدخل <span className="font-mono-num">Project URL</span> و <span className="font-mono-num">Anon Key</span> هنا. وعند النشر على GitHub اختر من <strong>Settings → Pages → Source</strong> خيار <strong>GitHub Actions</strong> بدلاً من Branch.
           </p>
         </div>
       </div>
