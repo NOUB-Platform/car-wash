@@ -90,7 +90,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Top Action Strip */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-slate-200">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">مركز عمليات المغسلة والمبيعات</h2>
+          <h2 className="text-lg font-bold text-slate-900">مركز عمليات المغسلة والمبيعات</h2>
           <p className="text-xs text-slate-600 mt-0.5">
             متابعة حارات الغسيل النشطة، الفصل الفوري بين فواتير الخدمات ومبيعات المنتجات، وحساب ضريبة 14%.
           </p>
@@ -122,7 +122,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>إجمالي الإيرادات (شامل 14%)</span>
             <TrendingUp className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono-num">
+          <div className="text-lg font-bold text-slate-900 font-mono-num">
             {formatEGP(stats.totalRevenue)}
           </div>
           <div className="text-[11px] text-slate-500 mt-1.5">
@@ -138,7 +138,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>إيرادات خدمات الغسيل</span>
             <CarFront className="w-4 h-4 text-blue-700" />
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono-num">
+          <div className="text-lg font-bold text-slate-900 font-mono-num">
             {formatEGP(stats.serviceRevenue)}
           </div>
           <div className="text-[11px] text-slate-500 mt-1.5">
@@ -151,7 +151,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>مبيعات المنتجات المنفردة</span>
             <Package className="w-4 h-4 text-emerald-700" />
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono-num">
+          <div className="text-lg font-bold text-slate-900 font-mono-num">
             {formatEGP(stats.retailRevenue)}
           </div>
           <div className="text-[11px] text-slate-500 mt-1.5">
@@ -164,7 +164,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>ضريبة القيمة المضافة (14%)</span>
             <Receipt className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="text-xl font-bold text-slate-900 font-mono-num">
+          <div className="text-lg font-bold text-slate-900 font-mono-num">
             {formatEGP(stats.totalVat)}
           </div>
           <div className="text-[11px] text-slate-500 mt-1.5">

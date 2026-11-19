@@ -213,8 +213,8 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
       {/* Header & Sub-Tabs */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">المخزن وتسعير الخدمات والمنتجات</h2>
-          <p className="text-sm text-slate-600 mt-1">
+          <h2 className="text-lg font-bold text-slate-900">المخزن وتسعير الخدمات والمنتجات</h2>
+          <p className="text-xs text-slate-600 mt-0.5">
             تسعير المنتجات بالتكلفة + نسبة المكسب أو الربح الثابت، وإدارة أسعار الغسيل حسب فئة السيارة.
           </p>
         </div>

@@ -65,8 +65,8 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">سجل الفواتير والطباعة</h2>
-          <p className="text-sm text-slate-600 mt-1">
+          <h2 className="text-lg font-bold text-slate-900">سجل الفواتير والطباعة</h2>
+          <p className="text-xs text-slate-600 mt-0.5">
             فصل واضح بين فواتير خدمات الغسيل وفواتير بيع المنتجات مع تتبع الكاشير والفني.
           </p>
         </div>

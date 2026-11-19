@@ -68,10 +68,10 @@ export const StaffView: React.FC<StaffViewProps> = ({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">
+          <h2 className="text-lg font-bold text-slate-900">
             طاقم العمل والأدوار والعمولات
           </h2>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-xs text-slate-600 mt-0.5">
             تتبع دقيق لمسؤولية كل فرد في المغسلة: من قام بالغسيل ومن أصدر الفاتورة ومن أتم البيع.
           </p>
         </div>
