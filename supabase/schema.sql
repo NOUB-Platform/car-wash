@@ -13,11 +13,11 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE IF NOT EXISTS public.app_settings (
   id TEXT PRIMARY KEY DEFAULT 'default',
   business_name TEXT NOT NULL DEFAULT 'ووش كير للعناية بالسيارات',
-  branch_name TEXT NOT NULL DEFAULT 'فرع مدينة نصر - القاهرة',
+  branch_name TEXT NOT NULL DEFAULT 'فرع أول الهرم - الجيزة',
   tax_registration_no TEXT NOT NULL DEFAULT '412-889-301',
   vat_rate NUMERIC(5,2) NOT NULL DEFAULT 14.00,
   access_passcode TEXT NOT NULL DEFAULT '12345678',
-  address TEXT NOT NULL DEFAULT 'شارع مصطفى النحاس، مدينة نصر، القاهرة',
+  address TEXT NOT NULL DEFAULT 'أول شارع الهرم، الجيزة',
   phone TEXT NOT NULL DEFAULT '01000000000',
   receipt_footer_service TEXT NOT NULL DEFAULT 'شكراً لاختياركم ووش كير. يرجى فحص السيارة قبل المغادرة.',
   receipt_footer_retail TEXT NOT NULL DEFAULT 'الاستبدال أو الاسترجاع خلال 14 يوماً بأصل الفاتورة والعبوة بحالتها الأصلية.',
@@ -260,8 +260,8 @@ END $$;
 -- 12. البيانات الأولية الواقعية (Seed Data) - جاهزة للتشغيل والتجربة
 -- ============================================================================
 
-INSERT INTO public.app_settings (id, business_name, branch_name, tax_registration_no, vat_rate, access_passcode)
-VALUES ('default', 'ووش كير للعناية بالسيارات', 'فرع مدينة نصر - القاهرة', '412-889-301', 14.00, '12345678')
+INSERT INTO public.app_settings (id, business_name, branch_name, tax_registration_no, vat_rate, access_passcode, address)
+VALUES ('default', 'ووش كير للعناية بالسيارات', 'فرع أول الهرم - الجيزة', '412-889-301', 14.00, '12345678', 'أول شارع الهرم، الجيزة')
 ON CONFLICT (id) DO NOTHING;
 
 -- طاقم العمل (أحمد مجدي، محمود كمال، وغيرهم)

@@ -2,8 +2,8 @@
 
 @layer base {
   :root {
-    --font-display: 'Cairo', system-ui, -apple-system, sans-serif;
-    --font-sans: 'IBM Plex Sans Arabic', 'Cairo', system-ui, sans-serif;
+    --font-display: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif;
+    --font-sans: 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
   }
 
@@ -12,6 +12,7 @@
     font-size: 14.5px;
     background-color: #F8FAFC;
     color: #0F172A;
+    -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, .font-display {

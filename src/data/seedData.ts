@@ -14,11 +14,11 @@ const minsAgo = (m: number) => new Date(Date.now() - m * 60 * 1000).toISOString(
 export const INITIAL_SETTINGS: AppSettings = {
   id: 'default',
   business_name: 'ووش كير للعناية بالسيارات',
-  branch_name: 'فرع مدينة نصر - القاهرة',
+  branch_name: 'فرع أول الهرم - الجيزة',
   tax_registration_no: '412-889-301',
   vat_rate: 14,
   access_passcode: '12345678',
-  address: 'شارع مصطفى النحاس، مدينة نصر، القاهرة',
+  address: 'أول شارع الهرم، الجيزة',
   phone: '01000000000',
   receipt_footer_service: 'شكراً لاختياركم ووش كير. يرجى فحص السيارة قبل المغادرة.',
   receipt_footer_retail: 'الاستبدال أو الاسترجاع خلال 14 يوماً بأصل الفاتورة والعبوة بحالتها الأصلية.',

@@ -80,6 +80,8 @@ export const PosView: React.FC<PosViewProps> = ({
   const [washBay, setWashBay] = useState(WASH_BAYS[0]);
 
   // Shared invoice fields
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [saveCustomer, setSaveCustomer] = useState<boolean>(false);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
@@ -258,10 +260,13 @@ export const PosView: React.FC<PosViewProps> = ({
   };
 
   const handleSelectCustomer = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    if (!customerId) return;
     const cust = customers.find((c) => c.id === customerId);
     if (!cust) return;
     setCustomerName(cust.full_name);
     setCustomerPhone(cust.phone);
+    setSaveCustomer(false);
     if (mode === 'service') {
       setCarModel(cust.car_model);
       setCarPlate(cust.car_plate);
@@ -303,6 +308,8 @@ export const PosView: React.FC<PosViewProps> = ({
       const created = await onCreateInvoice({
         invoice_type: mode,
         payment_method: paymentMethod,
+        customer_id: selectedCustomerId || null,
+        save_customer: !selectedCustomerId && saveCustomer && Boolean(customerName.trim()),
         customer_name:
           customerName.trim() ||
           (mode === 'service' ? 'عميل غسيل مباشر' : 'عميل نقدي - بيع سريع'),
@@ -329,6 +336,8 @@ export const PosView: React.FC<PosViewProps> = ({
       });
 
       setActiveCart([]);
+      setSelectedCustomerId('');
+      setSaveCustomer(false);
       setCustomerName('');
       setCustomerPhone('');
       setCarModel('');
@@ -344,41 +353,51 @@ export const PosView: React.FC<PosViewProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Compact Mode Switcher Header */}
-      <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900">
-            نقطة البيع وإصدار الفواتير المنفصلة
-          </h2>
-          <p className="text-xs text-slate-500">
-            اختر الخدمات أو المنتجات بالضغط على مربع الاختيار (اختيار متعدد)، وتُحسب ضريبة {vatRate}% تلقائياً.
-          </p>
+      {/* Unmistakable Folder-Tab Header */}
+      <div className="bg-white border border-slate-200 rounded-xl pt-3.5 px-4 overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-3">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
+              نقطة البيع وإصدار الفواتير المنفصلة
+            </h2>
+            <p className="text-xs text-slate-500">
+              اختر التبويب المناسب لنوع الفاتورة، ثم حدد الخدمات أو المنتجات (اختيار متعدد)، وتُحسب ضريبة {vatRate}% تلقائياً.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200 shrink-0">
+        <div
+          role="tablist"
+          aria-label="نوع الفاتورة"
+          className="flex flex-wrap items-end gap-1.5 border-b-2 border-teal-700 pt-1"
+        >
           <button
             type="button"
+            role="tab"
+            aria-selected={mode === 'service'}
             onClick={() => handleModeSwitch('service')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-t-lg text-xs font-bold flex items-center gap-2 transition-colors whitespace-nowrap border border-b-0 ${
               mode === 'service'
-                ? 'bg-blue-700 text-white'
-                : 'text-slate-700 hover:bg-white'
+                ? 'bg-teal-700 text-white border-teal-800'
+                : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
-            <CarFront className="w-3.5 h-3.5" />
-            <span>فاتورة خدمات غسيل (SRV)</span>
+            <CarFront className="w-4 h-4" />
+            <span>تبويب فاتورة خدمات غسيل (SRV)</span>
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={mode === 'retail'}
             onClick={() => handleModeSwitch('retail')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-t-lg text-xs font-bold flex items-center gap-2 transition-colors whitespace-nowrap border border-b-0 ${
               mode === 'retail'
-                ? 'bg-emerald-700 text-white'
-                : 'text-slate-700 hover:bg-white'
+                ? 'bg-teal-700 text-white border-teal-800'
+                : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
-            <Package className="w-3.5 h-3.5" />
-            <span>فاتورة بيع منتجات منفردة (RTL)</span>
+            <Package className="w-4 h-4" />
+            <span>تبويب فاتورة بيع منتجات منفردة (RTL)</span>
           </button>
         </div>
       </div>
@@ -624,7 +643,7 @@ export const PosView: React.FC<PosViewProps> = ({
             {/* Quick Customer Picker */}
             <div>
               <select
-                defaultValue=""
+                value={selectedCustomerId}
                 onChange={(e) => handleSelectCustomer(e.target.value)}
                 aria-label="اختيار عميل مسجل"
                 className="w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
@@ -646,7 +665,10 @@ export const PosView: React.FC<PosViewProps> = ({
                 <input
                   type="text"
                   value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
+                  onChange={(e) => {
+                    setCustomerName(e.target.value);
+                    if (selectedCustomerId) setSelectedCustomerId('');
+                  }}
                   placeholder={mode === 'service' ? 'مثال: حسام إبراهيم' : 'عميل نقدي'}
                   className="w-full h-8 px-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
@@ -665,6 +687,18 @@ export const PosView: React.FC<PosViewProps> = ({
                 />
               </div>
             </div>
+
+            {!selectedCustomerId && customerName.trim().length > 0 && (
+              <label className="flex items-center gap-2 text-[11px] text-slate-700 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={saveCustomer}
+                  onChange={(e) => setSaveCustomer(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-slate-300 text-blue-700 focus:ring-blue-600"
+                />
+                <span>حفظ بيانات العميل في سجل العملاء الدائمين</span>
+              </label>
+            )}
 
             {/* Service Vehicle Fields */}
             {mode === 'service' && (

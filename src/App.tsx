@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import {
+  AlertCircle,
   CarFront,
-  Database,
   LayoutDashboard,
   Lock,
   Menu,
   Package,
   Receipt,
+  Settings,
+  ShieldCheck,
   ShoppingCart,
   Users,
   X,
@@ -36,10 +38,11 @@ const TAB_LABELS: Record<ActiveTab, string> = {
   invoices: 'سجل الفواتير والطباعة',
   inventory: 'المخزن والتسعير',
   staff: 'طاقم العمل والعمولات',
-  database: 'Supabase والإعدادات',
+  database: 'الإعدادات',
 };
 
 const SESSION_UNLOCK_KEY = 'naqaa_terminal_unlocked';
+const SETTINGS_PASSCODE = '87654321';
 
 export function App() {
   const store = useCarWashStore();
@@ -56,6 +59,21 @@ export function App() {
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Settings security gate state (auto-locks when navigating away)
+  const [settingsUnlocked, setSettingsUnlocked] = useState(false);
+  const [settingsPassInput, setSettingsPassInput] = useState('');
+  const [settingsPassError, setSettingsPassError] = useState<string | null>(null);
+
+  const navigateTab = (tab: ActiveTab) => {
+    if (tab !== 'database') {
+      setSettingsUnlocked(false);
+      setSettingsPassInput('');
+      setSettingsPassError(null);
+    }
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
+  };
+
   const handleUnlock = () => {
     try {
       sessionStorage.setItem(SESSION_UNLOCK_KEY, 'true');
@@ -71,13 +89,25 @@ export function App() {
     } catch {
       // Ignore storage error
     }
+    setSettingsUnlocked(false);
+    setSettingsPassInput('');
     setUnlocked(false);
   };
 
   const handleOpenPos = (mode: InvoiceType) => {
     setPosInitialMode(mode);
-    setActiveTab('pos');
-    setMobileMenuOpen(false);
+    navigateTab('pos');
+  };
+
+  const handleUnlockSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (settingsPassInput.trim() === SETTINGS_PASSCODE) {
+      setSettingsUnlocked(true);
+      setSettingsPassInput('');
+      setSettingsPassError(null);
+    } else {
+      setSettingsPassError('كلمة مرور الإعدادات غير صحيحة.');
+    }
   };
 
   if (!unlocked) {
@@ -101,7 +131,7 @@ export function App() {
     { id: 'invoices', label: 'سجل الفواتير', icon: Receipt },
     { id: 'inventory', label: 'المخزن والتسعير', icon: Package },
     { id: 'staff', label: 'طاقم العمل', icon: Users },
-    { id: 'database', label: 'قاعدة البيانات SQL', icon: Database },
+    { id: 'database', label: 'الإعدادات', icon: Settings },
   ];
 
   return (
@@ -140,10 +170,7 @@ export function App() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setMobileMenuOpen(false);
-                  }}
+                  onClick={() => navigateTab(item.id)}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                     isActive
                       ? 'bg-white text-blue-800 font-bold border border-blue-200 shadow-xs'
@@ -229,6 +256,22 @@ export function App() {
 
         {/* Active Workspace Viewport */}
         <main className="no-print flex-1 p-4 md:p-6 max-w-[1400px] w-full mx-auto">
+          {store.syncError && activeTab !== 'database' && (
+            <div className="mb-4 px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+                <span>تنبيه المزامنة: {store.syncError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigateTab('database')}
+                className="font-bold text-amber-800 underline shrink-0"
+              >
+                فحص الإعدادات
+              </button>
+            </div>
+          )}
+
           {activeTab === 'dashboard' && (
             <DashboardView
               invoices={store.invoices}
@@ -237,7 +280,7 @@ export function App() {
               onOpenPos={handleOpenPos}
               onUpdateStatus={(id, status) => store.updateInvoiceStatus(id, status)}
               onPreviewInvoice={(inv) => setPreviewInvoice(inv)}
-              onNavigateTab={(tab) => setActiveTab(tab)}
+              onNavigateTab={(tab) => navigateTab(tab)}
             />
           )}
 
@@ -285,17 +328,76 @@ export function App() {
             />
           )}
 
-          {activeTab === 'database' && (
-            <DatabaseSettingsView
-              settings={store.settings}
-              supabaseConnected={store.supabaseConnected}
-              syncing={store.syncing}
-              syncError={store.syncError}
-              onUpdateSettings={store.updateSettings}
-              onSyncSupabase={store.syncFromSupabase}
-              onResetDemoData={store.resetDemoData}
-            />
-          )}
+          {activeTab === 'database' &&
+            (!settingsUnlocked ? (
+              <div className="min-h-[60vh] flex items-center justify-center p-4">
+                <form
+                  onSubmit={handleUnlockSettings}
+                  className="w-full max-w-sm bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center shrink-0">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-slate-900">
+                        إعدادات الإدارة المحمية
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        هذا القسم مخصص للمدير فقط. أدخل كلمة المرور الخاصة بالإعدادات.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="settings-passcode"
+                      className="block text-xs font-semibold text-slate-700 mb-1.5"
+                    >
+                      كلمة مرور الإعدادات
+                    </label>
+                    <input
+                      id="settings-passcode"
+                      type="password"
+                      dir="ltr"
+                      autoFocus
+                      value={settingsPassInput}
+                      onChange={(e) => {
+                        setSettingsPassInput(e.target.value);
+                        if (settingsPassError) setSettingsPassError(null);
+                      }}
+                      placeholder="••••••••"
+                      className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm tracking-widest font-mono-num focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    />
+                  </div>
+
+                  {settingsPassError && (
+                    <p className="text-xs font-medium text-red-600" role="alert">
+                      {settingsPassError}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full h-10 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors"
+                  >
+                    فتح الإعدادات
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <DatabaseSettingsView
+                settings={store.settings}
+                supabaseConnected={store.supabaseConnected}
+                syncing={store.syncing}
+                syncError={store.syncError}
+                onUpdateSettings={store.updateSettings}
+                onSyncSupabase={store.syncFromSupabase}
+                onPushToSupabase={store.pushLocalDataToSupabase}
+                onResetDemoData={store.resetDemoData}
+                onLockSettings={() => setSettingsUnlocked(false)}
+              />
+            ))}
         </main>
       </div>
 

@@ -62,32 +62,43 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
   }, [filtered]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+    <div className="space-y-5">
+      {/* Header & Unmistakable Folder-Tab Strip */}
+      <div className="bg-white border border-slate-200 rounded-xl pt-3.5 px-4 overflow-hidden">
+        <div className="pb-3">
           <h2 className="text-lg font-bold text-slate-900">سجل الفواتير والطباعة</h2>
           <p className="text-xs text-slate-600 mt-0.5">
             فصل واضح بين فواتير خدمات الغسيل وفواتير بيع المنتجات مع تتبع الكاشير والفني.
           </p>
         </div>
 
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200 shrink-0">
+        <div
+          role="tablist"
+          aria-label="تصفية سجل الفواتير"
+          className="flex flex-wrap items-end gap-1.5 border-b-2 border-teal-700 pt-1"
+        >
           <button
             type="button"
+            role="tab"
+            aria-selected={typeFilter === 'all'}
             onClick={() => setTypeFilter('all')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors whitespace-nowrap ${
-              typeFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold transition-colors whitespace-nowrap border border-b-0 ${
+              typeFilter === 'all'
+                ? 'bg-teal-700 text-white border-teal-800'
+                : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
             كل الفواتير ({invoices.length})
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={typeFilter === 'service'}
             onClick={() => setTypeFilter('service')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
               typeFilter === 'service'
-                ? 'bg-blue-700 text-white'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-teal-700 text-white border-teal-800'
+                : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
             <CarFront className="w-3.5 h-3.5" />
@@ -95,11 +106,13 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={typeFilter === 'retail'}
             onClick={() => setTypeFilter('retail')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
               typeFilter === 'retail'
-                ? 'bg-emerald-700 text-white'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-teal-700 text-white border-teal-800'
+                : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
             <Package className="w-3.5 h-3.5" />
@@ -117,7 +130,7 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="بحث برقم الفاتورة، اللوحة، العميل، أو اسم الموظف (مثل أحمد مجدي)..."
-            className="w-full h-10 pr-10 pl-4 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="w-full h-9 pr-10 pl-4 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
         </div>
 
@@ -146,32 +159,31 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
       {/* Ledger Table */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
+          <table className="w-full text-xs">
+            <thead className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
               <tr>
-                <th className="py-3 px-4 text-right font-semibold">رقم الفاتورة</th>
-                <th className="py-3 px-4 text-right font-semibold">التصنيف</th>
-                <th className="py-3 px-4 text-right font-semibold">العميل / التفاصيل</th>
-                <th className="py-3 px-4 text-right font-semibold">المنفذ / البائع</th>
-                <th className="py-3 px-4 text-right font-semibold">الكاشير</th>
-                <th className="py-3 px-4 text-right font-semibold">الحالة</th>
-                <th className="py-3 px-4 text-left font-semibold">الخصم</th>
-                <th className="py-3 px-4 text-left font-semibold">ضريبة 14%</th>
-                <th className="py-3 px-4 text-left font-semibold">الإجمالي</th>
-                <th className="py-3 px-4 text-center font-semibold">طباعة</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">رقم الفاتورة</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">التصنيف</th>
+                <th className="py-2.5 px-3 text-right font-semibold min-w-[200px] whitespace-nowrap">العميل / التفاصيل</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">المنفذ / البائع</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">الكاشير</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">الحالة</th>
+                <th className="py-2.5 px-3 text-left font-semibold whitespace-nowrap">ضريبة 14%</th>
+                <th className="py-2.5 px-3 text-left font-semibold whitespace-nowrap">الإجمالي</th>
+                <th className="py-2.5 px-3 text-center font-semibold whitespace-nowrap">طباعة</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-10 text-center text-sm text-slate-500">
+                  <td colSpan={9} className="py-10 text-center text-sm text-slate-500">
                     لا توجد فواتير مطابقة لمعايير البحث الحالية.
                   </td>
                 </tr>
               ) : (
                 filtered.map((inv) => (
                   <tr key={inv.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
                       <div className="font-mono-num font-bold text-slate-900">
                         {inv.invoice_number}
                       </div>
@@ -179,7 +191,7 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
                         {formatDateTimeAr(inv.created_at)}
                       </div>
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
                       <span
                         className={`text-xs font-bold ${
                           inv.invoice_type === 'service' ? 'text-blue-700' : 'text-emerald-700'
@@ -191,21 +203,23 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
                         {PAYMENT_METHOD_LABELS[inv.payment_method]}
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-slate-900">{inv.customer_name}</div>
-                      <div className="text-xs text-slate-500">
+                    <td className="py-2.5 px-3 min-w-[200px]">
+                      <div className="font-semibold text-slate-900 whitespace-nowrap">
+                        {inv.customer_name}
+                      </div>
+                      <div className="text-[11px] text-slate-500 whitespace-nowrap">
                         {inv.invoice_type === 'service'
                           ? `${inv.car_model || '—'} · ${inv.car_plate || '—'}`
                           : `${inv.items.length} صنف منتج`}
                       </div>
                     </td>
-                    <td className="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">
+                    <td className="py-2.5 px-3 font-semibold text-slate-800 whitespace-nowrap">
                       {getStaffName(inv.performed_by_staff_id)}
                     </td>
-                    <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
                       {getStaffName(inv.created_by_staff_id)}
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
                       {inv.invoice_type === 'service' && inv.status !== 'completed' ? (
                         <select
                           value={inv.status}
@@ -226,16 +240,20 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-left font-mono-num text-amber-700 whitespace-nowrap">
-                      {inv.discount_amount > 0 ? `- ${formatEGP(inv.discount_amount)}` : '—'}
-                    </td>
-                    <td className="py-3 px-4 text-left font-mono-num text-slate-600 whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-left font-mono-num text-slate-600 whitespace-nowrap">
                       {formatEGP(inv.vat_amount)}
                     </td>
-                    <td className="py-3 px-4 text-left font-mono-num font-bold text-slate-900 whitespace-nowrap">
-                      {formatEGP(inv.total_amount)}
+                    <td className="py-2.5 px-3 text-left font-mono-num whitespace-nowrap">
+                      <div className="font-bold text-slate-900">
+                        {formatEGP(inv.total_amount)}
+                      </div>
+                      {inv.discount_amount > 0 && (
+                        <div className="text-[10px] text-amber-700">
+                          خصم: - {formatEGP(inv.discount_amount)}
+                        </div>
+                      )}
                     </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       <button
                         type="button"
                         onClick={() => onPreviewInvoice(inv)}

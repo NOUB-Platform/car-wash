@@ -342,27 +342,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
+          <table className="w-full text-xs">
+            <thead className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
               <tr>
-                <th className="py-3 px-4 text-right font-semibold">رقم الفاتورة</th>
-                <th className="py-3 px-4 text-right font-semibold">النوع</th>
-                <th className="py-3 px-4 text-right font-semibold">العميل / السيارة</th>
-                <th className="py-3 px-4 text-right font-semibold">المنفذ / البائع</th>
-                <th className="py-3 px-4 text-right font-semibold">الكاشير</th>
-                <th className="py-3 px-4 text-right font-semibold">الدفع</th>
-                <th className="py-3 px-4 text-left font-semibold">ضريبة 14%</th>
-                <th className="py-3 px-4 text-left font-semibold">الإجمالي</th>
-                <th className="py-3 px-4 text-center font-semibold">إجراء</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">رقم الفاتورة</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">النوع</th>
+                <th className="py-2.5 px-3 text-right font-semibold min-w-[190px] whitespace-nowrap">العميل / السيارة</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">المنفذ / البائع</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">الكاشير</th>
+                <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">الدفع</th>
+                <th className="py-2.5 px-3 text-left font-semibold whitespace-nowrap">ضريبة 14%</th>
+                <th className="py-2.5 px-3 text-left font-semibold whitespace-nowrap">الإجمالي</th>
+                <th className="py-2.5 px-3 text-center font-semibold whitespace-nowrap">إجراء</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {invoices.slice(0, 6).map((inv) => (
                 <tr key={inv.id} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="py-3 px-4 font-mono-num font-semibold text-slate-900 whitespace-nowrap">
+                  <td className="py-2.5 px-3 font-mono-num font-semibold text-slate-900 whitespace-nowrap">
                     {inv.invoice_number}
                   </td>
-                  <td className="py-3 px-4 whitespace-nowrap">
+                  <td className="py-2.5 px-3 whitespace-nowrap">
                     <span
                       className={`text-xs font-semibold ${
                         inv.invoice_type === 'service' ? 'text-blue-700' : 'text-emerald-700'
@@ -371,30 +371,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       {inv.invoice_type === 'service' ? 'خدمة غسيل' : 'بيع منتج'}
                     </span>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="font-medium text-slate-900">{inv.customer_name}</div>
-                    <div className="text-xs text-slate-500">
+                  <td className="py-2.5 px-3 min-w-[190px]">
+                    <div className="font-semibold text-slate-900 whitespace-nowrap">{inv.customer_name}</div>
+                    <div className="text-[11px] text-slate-500 whitespace-nowrap">
                       {inv.invoice_type === 'service'
                         ? `${inv.car_model || ''} · ${inv.car_plate || ''}`
                         : formatDateTimeAr(inv.created_at)}
                     </div>
                   </td>
-                  <td className="py-3 px-4 font-medium text-slate-800 whitespace-nowrap">
+                  <td className="py-2.5 px-3 font-medium text-slate-800 whitespace-nowrap">
                     {getStaffName(inv.performed_by_staff_id)}
                   </td>
-                  <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
+                  <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
                     {getStaffName(inv.created_by_staff_id)}
                   </td>
-                  <td className="py-3 px-4 text-xs text-slate-600 whitespace-nowrap">
+                  <td className="py-2.5 px-3 text-xs text-slate-600 whitespace-nowrap">
                     {PAYMENT_METHOD_LABELS[inv.payment_method]}
                   </td>
-                  <td className="py-3 px-4 text-left font-mono-num text-slate-600 whitespace-nowrap">
+                  <td className="py-2.5 px-3 text-left font-mono-num text-slate-600 whitespace-nowrap">
                     {formatEGP(inv.vat_amount)}
                   </td>
-                  <td className="py-3 px-4 text-left font-mono-num font-bold text-slate-900 whitespace-nowrap">
+                  <td className="py-2.5 px-3 text-left font-mono-num font-bold text-slate-900 whitespace-nowrap">
                     {formatEGP(inv.total_amount)}
                   </td>
-                  <td className="py-3 px-4 text-center whitespace-nowrap">
+                  <td className="py-2.5 px-3 text-center whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => onPreviewInvoice(inv)}

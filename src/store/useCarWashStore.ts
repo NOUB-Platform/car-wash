@@ -30,7 +30,7 @@ import {
 } from '../types/carwash';
 import { calculateInvoiceTotals, roundMoney } from '../utils/pricing';
 
-const STORAGE_KEY = 'washcare_carwash_state_v2';
+const STORAGE_KEY = 'washcare_carwash_state_v3';
 
 interface PersistedState {
   settings: AppSettings;
@@ -87,6 +87,8 @@ function generateUuid(): string {
 export interface CreateInvoicePayload {
   invoice_type: InvoiceType;
   payment_method: PaymentMethod;
+  customer_id?: string | null;
+  save_customer?: boolean;
   customer_name: string;
   customer_phone: string;
   car_model?: string;
@@ -314,11 +316,34 @@ export function useCarWashStore() {
       const invoiceId = generateUuid();
       const now = new Date().toISOString();
       const prefix = payload.invoice_type === 'service' ? 'SRV' : 'RTL';
-      const existingOfType = state.invoices.filter(
-        (inv) => inv.invoice_type === payload.invoice_type
-      ).length;
-      const seq = String(existingOfType + 1).padStart(4, '0');
+      const existingNums = state.invoices
+        .filter((inv) => inv.invoice_type === payload.invoice_type)
+        .map((inv) => {
+          const tail = inv.invoice_number.split('-').pop();
+          return Number(tail) || 0;
+        });
+      const nextNum = (existingNums.length > 0 ? Math.max(...existingNums) : 0) + 1;
+      const seq = String(nextNum).padStart(4, '0');
       const invoiceNumber = `${prefix}-2026-${seq}`;
+
+      let resolvedCustomerId: string | null = payload.customer_id ?? null;
+      let newCustomerRecord: Customer | null = null;
+      if (
+        !resolvedCustomerId &&
+        payload.save_customer &&
+        payload.customer_name.trim()
+      ) {
+        resolvedCustomerId = generateUuid();
+        newCustomerRecord = {
+          id: resolvedCustomerId,
+          full_name: payload.customer_name.trim(),
+          phone: payload.customer_phone.trim(),
+          car_model: payload.car_model?.trim() || '',
+          car_plate: payload.car_plate?.trim() || '',
+          vehicle_tier: payload.vehicle_tier || 'sedan',
+          created_at: now,
+        };
+      }
 
       const totals = calculateInvoiceTotals({
         items: payload.items,
@@ -348,6 +373,7 @@ export function useCarWashStore() {
         invoice_type: payload.invoice_type,
         status: isRetail ? 'completed' : 'washing',
         payment_method: payload.payment_method,
+        customer_id: resolvedCustomerId,
         customer_name: payload.customer_name.trim() || 'عميل نقدي',
         customer_phone: payload.customer_phone.trim(),
         car_model: isRetail ? null : payload.car_model?.trim() || null,
@@ -407,6 +433,9 @@ export function useCarWashStore() {
         return {
           ...prev,
           products: updatedProducts,
+          customers: newCustomerRecord
+            ? [newCustomerRecord, ...prev.customers]
+            : prev.customers,
           invoices: [newInvoice, ...prev.invoices],
           stockMovements: [...newMovements, ...prev.stockMovements],
         };
@@ -414,13 +443,21 @@ export function useCarWashStore() {
 
       const client = buildSupabaseClient();
       if (client) {
+        setSyncError(null);
+        if (newCustomerRecord) {
+          const custRes = await client.from('customers').insert(newCustomerRecord);
+          if (custRes.error) setSyncError(custRes.error.message);
+        }
         const { items: _items, ...invoiceRow } = newInvoice;
-        await client.from('invoices').insert(invoiceRow);
-        await client.from('invoice_items').insert(items);
+        const invRes = await client.from('invoices').insert(invoiceRow);
+        if (invRes.error) setSyncError(invRes.error.message);
+        const itemsRes = await client.from('invoice_items').insert(items);
+        if (itemsRes.error) setSyncError(itemsRes.error.message);
         if (newMovements.length > 0) {
-          await client.from('stock_movements').insert(
+          const movRes = await client.from('stock_movements').insert(
             newMovements.map(({ product_name: _pn, ...row }) => row)
           );
+          if (movRes.error) setSyncError(movRes.error.message);
         }
       }
 
@@ -450,44 +487,50 @@ export function useCarWashStore() {
 
       const client = buildSupabaseClient();
       if (client) {
-        await client
+        const { error } = await client
           .from('invoices')
           .update({
             status,
             ...(status === 'completed'
-              ? { completed_at: now, completed_by_staff_id: completedByStaffId }
+              ? { completed_at: now, completed_by_staff_id: completedByStaffId ?? null }
               : {}),
           })
           .eq('id', invoiceId);
+        if (error) setSyncError(error.message);
       }
     },
     []
   );
 
-  const upsertProduct = useCallback(async (productData: Omit<Product, 'id' | 'created_at'> & { id?: string }) => {
-    const id = productData.id || generateUuid();
-    const now = new Date().toISOString();
-    const record: Product = {
-      ...productData,
-      id,
-      created_at: now,
-    };
-
-    setState((prev) => {
-      const exists = prev.products.some((p) => p.id === id);
-      return {
-        ...prev,
-        products: exists
-          ? prev.products.map((p) => (p.id === id ? { ...p, ...productData } : p))
-          : [record, ...prev.products],
+  const upsertProduct = useCallback(
+    async (productData: Omit<Product, 'id' | 'created_at'> & { id?: string }) => {
+      const id = productData.id || generateUuid();
+      const now = new Date().toISOString();
+      const existing = state.products.find((p) => p.id === id);
+      const record: Product = {
+        ...productData,
+        id,
+        created_at: existing?.created_at || now,
       };
-    });
 
-    const client = buildSupabaseClient();
-    if (client) {
-      await client.from('products').upsert(record);
-    }
-  }, []);
+      setState((prev) => {
+        const exists = prev.products.some((p) => p.id === id);
+        return {
+          ...prev,
+          products: exists
+            ? prev.products.map((p) => (p.id === id ? { ...p, ...productData } : p))
+            : [record, ...prev.products],
+        };
+      });
+
+      const client = buildSupabaseClient();
+      if (client) {
+        const { error } = await client.from('products').upsert(record);
+        if (error) setSyncError(error.message);
+      }
+    },
+    [state.products]
+  );
 
   const adjustProductStock = useCallback(
     async (params: {
@@ -525,7 +568,8 @@ export function useCarWashStore() {
       const client = buildSupabaseClient();
       if (client) {
         const { product_name: _pn, ...row } = movement;
-        await client.from('stock_movements').insert(row);
+        const { error } = await client.from('stock_movements').insert(row);
+        if (error) setSyncError(error.message);
       }
     },
     [state.products]
@@ -534,10 +578,11 @@ export function useCarWashStore() {
   const upsertService = useCallback(
     async (serviceData: Omit<WashService, 'id' | 'created_at'> & { id?: string }) => {
       const id = serviceData.id || generateUuid();
+      const existing = state.services.find((s) => s.id === id);
       const record: WashService = {
         ...serviceData,
         id,
-        created_at: new Date().toISOString(),
+        created_at: existing?.created_at || new Date().toISOString(),
       };
       setState((prev) => {
         const exists = prev.services.some((s) => s.id === id);
@@ -551,19 +596,21 @@ export function useCarWashStore() {
 
       const client = buildSupabaseClient();
       if (client) {
-        await client.from('wash_services').upsert(record);
+        const { error } = await client.from('wash_services').upsert(record);
+        if (error) setSyncError(error.message);
       }
     },
-    []
+    [state.services]
   );
 
   const upsertStaff = useCallback(
     async (staffData: Omit<StaffMember, 'id' | 'created_at'> & { id?: string }) => {
       const id = staffData.id || generateUuid();
+      const existing = state.staff.find((s) => s.id === id);
       const record: StaffMember = {
         ...staffData,
         id,
-        created_at: new Date().toISOString(),
+        created_at: existing?.created_at || new Date().toISOString(),
       };
       setState((prev) => {
         const exists = prev.staff.some((s) => s.id === id);
@@ -577,22 +624,78 @@ export function useCarWashStore() {
 
       const client = buildSupabaseClient();
       if (client) {
-        await client.from('staff').upsert(record);
+        const { error } = await client.from('staff').upsert(record);
+        if (error) setSyncError(error.message);
       }
     },
-    []
+    [state.staff]
   );
 
-  const updateSettings = useCallback(async (patch: Partial<AppSettings>) => {
-    setState((prev) => {
-      const next = { ...prev.settings, ...patch };
+  const updateSettings = useCallback(
+    async (patch: Partial<AppSettings>) => {
+      const next: AppSettings = { ...state.settings, ...patch };
+      setState((prev) => ({ ...prev, settings: next }));
+
       const client = buildSupabaseClient();
       if (client) {
-        client.from('app_settings').upsert(next);
+        const { error } = await client.from('app_settings').upsert(next);
+        if (error) setSyncError(error.message);
       }
-      return { ...prev, settings: next };
-    });
-  }, []);
+    },
+    [state.settings]
+  );
+
+  const pushLocalDataToSupabase = useCallback(async (): Promise<{
+    ok: boolean;
+    message: string;
+  }> => {
+    const client = buildSupabaseClient();
+    if (!client) {
+      return {
+        ok: false,
+        message: 'يرجى حفظ بيانات الاتصال بـ Supabase أولاً.',
+      };
+    }
+
+    setSyncing(true);
+    setSyncError(null);
+    try {
+      const settingsRes = await client.from('app_settings').upsert(state.settings);
+      if (settingsRes.error) throw new Error(settingsRes.error.message);
+
+      if (state.staff.length > 0) {
+        const staffRes = await client.from('staff').upsert(state.staff);
+        if (staffRes.error) throw new Error(staffRes.error.message);
+      }
+
+      if (state.services.length > 0) {
+        const svcRes = await client.from('wash_services').upsert(state.services);
+        if (svcRes.error) throw new Error(svcRes.error.message);
+      }
+
+      if (state.products.length > 0) {
+        const prodRes = await client.from('products').upsert(state.products);
+        if (prodRes.error) throw new Error(prodRes.error.message);
+      }
+
+      if (state.customers.length > 0) {
+        const custRes = await client.from('customers').upsert(state.customers);
+        if (custRes.error) throw new Error(custRes.error.message);
+      }
+
+      await syncFromSupabase();
+      return {
+        ok: true,
+        message: 'تم رفع الإعدادات والموظفين والخدمات والمنتجات والعملاء إلى Supabase بنجاح.',
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'تعذر رفع البيانات إلى Supabase';
+      setSyncError(msg);
+      return { ok: false, message: msg };
+    } finally {
+      setSyncing(false);
+    }
+  }, [state.settings, state.staff, state.services, state.products, state.customers, syncFromSupabase]);
 
   const resetDemoData = useCallback(() => {
     const fresh: PersistedState = {
@@ -613,6 +716,7 @@ export function useCarWashStore() {
     syncing,
     syncError,
     syncFromSupabase,
+    pushLocalDataToSupabase,
     createInvoice,
     updateInvoiceStatus,
     upsertProduct,

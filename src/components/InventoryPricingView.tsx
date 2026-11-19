@@ -209,22 +209,30 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header & Sub-Tabs */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+    <div className="space-y-5">
+      {/* Header & Unmistakable Folder-Tab Strip */}
+      <div className="bg-white border border-slate-200 rounded-xl pt-3.5 px-4 overflow-hidden">
+        <div className="pb-3">
           <h2 className="text-lg font-bold text-slate-900">المخزن وتسعير الخدمات والمنتجات</h2>
           <p className="text-xs text-slate-600 mt-0.5">
             تسعير المنتجات بالتكلفة + نسبة المكسب أو الربح الثابت، وإدارة أسعار الغسيل حسب فئة السيارة.
           </p>
         </div>
 
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200 shrink-0">
+        <div
+          role="tablist"
+          aria-label="أقسام المخزن والتسعير"
+          className="flex flex-wrap items-end gap-1.5 border-b-2 border-teal-700 pt-1"
+        >
           <button
             type="button"
+            role="tab"
+            aria-selected={subTab === 'products'}
             onClick={() => setSubTab('products')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap ${
-              subTab === 'products' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
+              subTab === 'products'
+                ? 'bg-teal-700 text-white border-teal-800'
+                : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
             <Package className="w-3.5 h-3.5" />
@@ -232,9 +240,13 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={subTab === 'services'}
             onClick={() => setSubTab('services')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap ${
-              subTab === 'services' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
+              subTab === 'services'
+                ? 'bg-teal-700 text-white border-teal-800'
+                : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
             <CarFront className="w-3.5 h-3.5" />
@@ -242,9 +254,13 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={subTab === 'movements'}
             onClick={() => setSubTab('movements')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap ${
-              subTab === 'movements' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
+              subTab === 'movements'
+                ? 'bg-teal-700 text-white border-teal-800'
+                : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
             <ArrowDownUp className="w-3.5 h-3.5" />
@@ -302,18 +318,18 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
 
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
                   <tr>
-                    <th className="py-3 px-4 text-right font-semibold">الكود والمنتج</th>
-                    <th className="py-3 px-4 text-right font-semibold">الماركة والتصنيف</th>
-                    <th className="py-3 px-4 text-center font-semibold">الرصيد</th>
-                    <th className="py-3 px-4 text-left font-semibold">التكلفة</th>
-                    <th className="py-3 px-4 text-right font-semibold">سياسة التسعير</th>
-                    <th className="py-3 px-4 text-left font-semibold">سعر البيع</th>
-                    <th className="py-3 px-4 text-left font-semibold">شامل {vatRate}%</th>
-                    <th className="py-3 px-4 text-left font-semibold">الربح/قطعة</th>
-                    <th className="py-3 px-4 text-center font-semibold">إجراءات</th>
+                    <th className="py-2.5 px-3 text-right font-semibold min-w-[200px] whitespace-nowrap">الكود والمنتج</th>
+                    <th className="py-2.5 px-3 text-right font-semibold min-w-[130px] whitespace-nowrap">الماركة والتصنيف</th>
+                    <th className="py-2.5 px-3 text-center font-semibold whitespace-nowrap">الرصيد</th>
+                    <th className="py-2.5 px-3 text-left font-semibold whitespace-nowrap">التكلفة</th>
+                    <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">سياسة التسعير</th>
+                    <th className="py-2.5 px-3 text-left font-semibold whitespace-nowrap">سعر البيع</th>
+                    <th className="py-2.5 px-3 text-left font-semibold whitespace-nowrap">شامل {vatRate}%</th>
+                    <th className="py-2.5 px-3 text-left font-semibold whitespace-nowrap">الربح/قطعة</th>
+                    <th className="py-2.5 px-3 text-center font-semibold whitespace-nowrap">إجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -323,15 +339,15 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
                     const priceWithVat = calculatePriceWithVat(prod.selling_price, vatRate);
                     return (
                       <tr key={prod.id} className="hover:bg-slate-50/70">
-                        <td className="py-3 px-4">
-                          <div className="font-semibold text-slate-900">{prod.name_ar}</div>
-                          <div className="text-xs text-slate-500 font-mono-num">{prod.sku}</div>
+                        <td className="py-2.5 px-3 min-w-[200px]">
+                          <div className="font-semibold text-slate-900 whitespace-nowrap">{prod.name_ar}</div>
+                          <div className="text-[11px] text-slate-500 font-mono-num whitespace-nowrap">{prod.sku}</div>
                         </td>
-                        <td className="py-3 px-4 text-xs text-slate-600">
-                          <div>{prod.brand}</div>
-                          <div className="text-slate-400">{prod.category}</div>
+                        <td className="py-2.5 px-3 text-xs text-slate-600 min-w-[130px]">
+                          <div className="whitespace-nowrap">{prod.brand}</div>
+                          <div className="text-[11px] text-slate-400 whitespace-nowrap">{prod.category}</div>
                         </td>
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
                           <span
                             className={`font-mono-num font-bold ${
                               isLow ? 'text-red-600' : 'text-slate-900'
@@ -345,26 +361,26 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
                             </div>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-left font-mono-num text-slate-600 whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-left font-mono-num text-slate-600 whitespace-nowrap">
                           {formatEGP(prod.cost_price)}
                         </td>
-                        <td className="py-3 px-4 text-xs text-slate-600 whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-xs text-slate-600 whitespace-nowrap">
                           {prod.pricing_mode === 'markup_percent' &&
                             `مكسب +${prod.markup_value}%`}
                           {prod.pricing_mode === 'markup_fixed' &&
                             `ربح ثابت +${prod.markup_value} ج.م`}
                           {prod.pricing_mode === 'manual' && 'تسعير يدوي مباشر'}
                         </td>
-                        <td className="py-3 px-4 text-left font-mono-num font-semibold text-slate-900 whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-left font-mono-num font-semibold text-slate-900 whitespace-nowrap">
                           {formatEGP(prod.selling_price)}
                         </td>
-                        <td className="py-3 px-4 text-left font-mono-num font-bold text-blue-700 whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-left font-mono-num font-bold text-blue-700 whitespace-nowrap">
                           {formatEGP(priceWithVat)}
                         </td>
-                        <td className="py-3 px-4 text-left font-mono-num font-semibold text-emerald-700 whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-left font-mono-num font-semibold text-emerald-700 whitespace-nowrap">
                           + {formatEGP(profit)}
                         </td>
-                        <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
                           <div className="inline-flex items-center gap-1.5">
                             <button
                               type="button"
