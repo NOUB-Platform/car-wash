@@ -162,29 +162,29 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
         <button
           type="button"
           onClick={onLockSettings}
-          className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 flex items-center gap-1.5 self-start sm:self-auto whitespace-nowrap"
+          className="group px-3.5 py-2 rounded-xl border border-blue-200 bg-sky-50/80 hover:bg-blue-700 hover:border-blue-700 text-xs font-semibold text-blue-700 hover:text-white flex items-center gap-1.5 self-start sm:self-auto whitespace-nowrap shadow-sm transition-all"
         >
-          <Lock className="w-3.5 h-3.5" />
+          <Lock className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
           <span>قفل شاشة الإعدادات</span>
         </button>
       </div>
 
       {/* Clear 3-Step Guide */}
-      <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-        <div className="space-y-1">
-          <div className="font-bold text-blue-800">1. وضع التشغيل الحالي</div>
+      <div className="bg-orange-50/80 border border-orange-200/80 rounded-2xl shadow-sm p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div className="space-y-1 bg-white/75 border border-orange-200/60 rounded-xl p-3">
+          <div className="font-bold text-orange-900">1. وضع التشغيل الحالي</div>
           <p className="text-slate-700 leading-relaxed">
             بدون إدخال رابط ومفتاح Supabase، يعمل التطبيق محلياً في المتصفح ولا يقرأ التعديلات اليدوية من لوحة Supabase.
           </p>
         </div>
-        <div className="space-y-1">
-          <div className="font-bold text-blue-800">2. مكان المفتاح في واجهة Supabase الجديدة</div>
+        <div className="space-y-1 bg-white/75 border border-orange-200/60 rounded-xl p-3">
+          <div className="font-bold text-orange-900">2. مكان المفتاح في واجهة Supabase الجديدة</div>
           <p className="text-slate-700 leading-relaxed">
             افتح <strong>Project Settings → API Keys</strong> وستجد <strong>Publishable key</strong> (يبدأ بـ <span className="font-mono-num">sb_publishable_</span>) بدلاً من anon، أو ستجد تبويب <strong>Legacy anon</strong> في نفس الصفحة.
           </p>
         </div>
-        <div className="space-y-1">
-          <div className="font-bold text-blue-800">3. الربط الدائم مع GitHub Pages</div>
+        <div className="space-y-1 bg-white/75 border border-orange-200/60 rounded-xl p-3">
+          <div className="font-bold text-orange-900">3. الربط الدائم مع GitHub Pages</div>
           <p className="text-slate-700 leading-relaxed">
             تكامل GitHub داخل Supabase مخصص لفروع القاعدة فقط. لربط الموقع نهائياً أدخل الرابط والمفتاح هنا أو أضف <span className="font-mono-num">VITE_SUPABASE_URL</span> و <span className="font-mono-num">VITE_SUPABASE_ANON_KEY</span> في Secrets الخاص بالمستودع.
           </p>
@@ -196,7 +196,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
         {/* Supabase Connector */}
         <form
           onSubmit={handleTestAndSaveSupabase}
-          className="lg:col-span-6 bg-white border border-slate-200 rounded-xl p-6 space-y-4"
+          className="lg:col-span-6 bg-sky-50/65 border border-sky-200 rounded-2xl shadow-sm p-6 space-y-4"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -231,7 +231,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
               value={sbUrl}
               onChange={(e) => setSbUrl(e.target.value)}
               placeholder="https://xxxxxxxxxxxx.supabase.co"
-              className="w-full h-10 px-3 rounded-lg border border-slate-200 text-xs font-mono-num"
+              className="w-full h-10 px-3 rounded-xl border border-sky-200 bg-white text-xs font-mono-num shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
             />
           </div>
 
@@ -246,7 +246,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
                 value={sbKey}
                 onChange={(e) => setSbKey(e.target.value)}
                 placeholder="sb_publishable_... أو eyJhbGciOi..."
-                className="w-full h-10 pl-3 pr-10 rounded-lg border border-slate-200 text-xs font-mono-num"
+                className="w-full h-10 pl-3 pr-10 rounded-xl border border-sky-200 bg-white text-xs font-mono-num shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
               />
               <button
                 type="button"
@@ -291,9 +291,13 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
             <button
               type="submit"
               disabled={testing || syncing || pushing}
-              className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold flex items-center gap-1.5 disabled:opacity-60"
+              className="btn-sheen group px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-60"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${testing || syncing ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 transition-transform group-hover:rotate-90 ${
+                  testing || syncing ? 'animate-spin' : ''
+                }`}
+              />
               <span>{testing ? 'جاري الاختبار...' : 'اختبار وحفظ الاتصال'}</span>
             </button>
             {supabaseConnected && (
@@ -302,24 +306,28 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
                   type="button"
                   disabled={syncing || pushing}
                   onClick={() => onSyncSupabase()}
-                  className="px-3.5 py-2 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-semibold flex items-center gap-1.5 disabled:opacity-60"
+                  className="group px-3.5 py-2 rounded-xl border border-blue-200 bg-white hover:bg-blue-700 hover:border-blue-700 text-blue-700 hover:text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-60"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 transition-transform group-hover:rotate-90 ${
+                      syncing ? 'animate-spin' : ''
+                    }`}
+                  />
                   <span>جلب أحدث البيانات</span>
                 </button>
                 <button
                   type="button"
                   disabled={pushing || syncing}
                   onClick={handlePushLocalToSupabase}
-                  className="px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold flex items-center gap-1.5 disabled:opacity-60"
+                  className="btn-sheen group px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-60"
                 >
-                  <UploadCloud className="w-3.5 h-3.5" />
+                  <UploadCloud className="w-3.5 h-3.5 transition-transform group-hover:-translate-y-0.5" />
                   <span>{pushing ? 'جاري الرفع...' : 'رفع البيانات إلى Supabase'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleDisconnectSupabase}
-                  className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700"
+                  className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-red-50 hover:border-red-200 hover:text-red-700 text-xs font-semibold text-slate-700 shadow-sm transition-all"
                 >
                   فصل الاتصال
                 </button>
@@ -331,7 +339,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
         {/* Business, 14% VAT & Passcode Settings */}
         <form
           onSubmit={handleSaveBusinessSettings}
-          className="lg:col-span-6 bg-white border border-slate-200 rounded-xl p-6 space-y-4"
+          className="lg:col-span-6 bg-stone-100/85 border border-stone-300/80 rounded-2xl shadow-sm p-6 space-y-4"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -343,9 +351,9 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
             <button
               type="button"
               onClick={onResetDemoData}
-              className="text-xs font-medium text-slate-500 hover:text-slate-900 flex items-center gap-1"
+              className="group text-xs font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1 transition-colors"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className="w-3.5 h-3.5 transition-transform group-hover:-rotate-90" />
               <span>استعادة البيانات الافتراضية</span>
             </button>
           </div>
@@ -359,7 +367,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
                 type="text"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs"
+                className="w-full h-9 px-3 rounded-xl border border-stone-300 bg-white text-xs shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
               />
             </div>
             <div>
@@ -370,7 +378,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
                 type="text"
                 value={branchName}
                 onChange={(e) => setBranchName(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs"
+                className="w-full h-9 px-3 rounded-xl border border-stone-300 bg-white text-xs shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
               />
             </div>
           </div>
@@ -385,7 +393,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
                 dir="ltr"
                 value={taxNo}
                 onChange={(e) => setTaxNo(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs font-mono-num"
+                className="w-full h-9 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono-num shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
               />
             </div>
             <div>
@@ -399,7 +407,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
                 max={30}
                 value={vatRate}
                 onChange={(e) => setVatRate(Number(e.target.value) || 0)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs font-mono-num"
+                className="w-full h-9 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono-num shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
               />
             </div>
             <div>
@@ -411,7 +419,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
                 dir="ltr"
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs font-mono-num"
+                className="w-full h-9 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono-num shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
               />
             </div>
           </div>
@@ -425,7 +433,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
           <div className="pt-1">
             <button
               type="submit"
-              className="px-5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold"
+              className="btn-sheen px-5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm transition-all"
             >
               حفظ الإعدادات
             </button>
@@ -434,13 +442,13 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
       </div>
 
       {/* Complete SQL Script Section */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-6 py-4 bg-emerald-50/65 border-b border-emerald-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-bold text-slate-900">
               كود SQL الكامل لإنشاء قاعدة البيانات في Supabase
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-600 mt-0.5">
               يتضمن الجداول، المشغلات التلقائية للمخزن، عروض التقارير، وبيانات تجريبية كاملة (أحمد مجدي، محمود كمال، الفواتير، والمنتجات).
             </p>
           </div>
@@ -448,17 +456,21 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
             <button
               type="button"
               onClick={handleCopySql}
-              className="px-3.5 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap"
+              className="btn-sheen group px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-all"
             >
-              {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedSql ? (
+                <Check className="w-3.5 h-3.5" />
+              ) : (
+                <Copy className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
+              )}
               <span>{copiedSql ? 'تم نسخ SQL' : 'نسخ كود SQL بالكامل'}</span>
             </button>
             <button
               type="button"
               onClick={handleDownloadSql}
-              className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap"
+              className="group px-3.5 py-2 rounded-xl border border-blue-200 bg-white hover:bg-blue-700 hover:border-blue-700 text-blue-700 hover:text-white text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shadow-sm transition-all"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5 transition-transform group-hover:translate-y-0.5" />
               <span>تحميل ملف .sql</span>
             </button>
           </div>

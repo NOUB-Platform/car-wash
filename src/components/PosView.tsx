@@ -21,6 +21,7 @@ import {
   VehicleTier,
   WashService,
 } from '../types/carwash';
+import { playSoundEffect } from '../utils/feedback';
 import {
   calculateInvoiceTotals,
   calculatePriceWithVat,
@@ -167,6 +168,7 @@ export const PosView: React.FC<PosViewProps> = ({
   }, [products, selectedCategory, searchTerm]);
 
   const handleModeSwitch = (nextMode: InvoiceType) => {
+    playSoundEffect('click');
     setMode(nextMode);
     setSelectedCategory('الكل');
     setSearchTerm('');
@@ -174,6 +176,7 @@ export const PosView: React.FC<PosViewProps> = ({
   };
 
   const handleTierChange = (nextTier: VehicleTier) => {
+    playSoundEffect('click');
     setVehicleTier(nextTier);
     setServiceCart((prev) =>
       prev.map((entry) => {
@@ -191,6 +194,7 @@ export const PosView: React.FC<PosViewProps> = ({
 
   // Multi-select checkbox toggle for wash services
   const toggleServiceSelection = (svc: WashService) => {
+    playSoundEffect('click');
     setFormError(null);
     const price = getServicePriceForTier(svc, vehicleTier);
     const tierShort = VEHICLE_TIER_LABELS[vehicleTier].split(' ')[0];
@@ -218,9 +222,11 @@ export const PosView: React.FC<PosViewProps> = ({
   const toggleProductSelection = (prod: Product) => {
     setFormError(null);
     if (prod.stock_qty <= 0) {
+      playSoundEffect('error');
       setFormError(`المنتج "${prod.name_ar}" غير متوفر بالمخزن حالياً.`);
       return;
     }
+    playSoundEffect('click');
     setRetailCart((prev) => {
       const exists = prev.some((i) => i.product_id === prod.id);
       if (exists) {
@@ -354,13 +360,13 @@ export const PosView: React.FC<PosViewProps> = ({
   return (
     <div className="space-y-4">
       {/* Unmistakable Folder-Tab Header */}
-      <div className="bg-white border border-slate-200 rounded-xl pt-3.5 px-4 overflow-hidden">
+      <div className="bg-white/95 border border-slate-200 rounded-2xl shadow-sm pt-3.5 px-4 overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-3">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
               نقطة البيع وإصدار الفواتير المنفصلة
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-600">
               اختر التبويب المناسب لنوع الفاتورة، ثم حدد الخدمات أو المنتجات (اختيار متعدد)، وتُحسب ضريبة {vatRate}% تلقائياً.
             </p>
           </div>
@@ -376,13 +382,13 @@ export const PosView: React.FC<PosViewProps> = ({
             role="tab"
             aria-selected={mode === 'service'}
             onClick={() => handleModeSwitch('service')}
-            className={`px-4 py-2.5 rounded-t-lg text-xs font-bold flex items-center gap-2 transition-colors whitespace-nowrap border border-b-0 ${
+            className={`group px-4 py-2.5 rounded-t-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap border border-b-0 ${
               mode === 'service'
-                ? 'bg-teal-700 text-white border-teal-800'
+                ? 'bg-teal-700 text-white border-teal-800 shadow-xs'
                 : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
-            <CarFront className="w-4 h-4" />
+            <CarFront className="w-4 h-4 transition-transform group-hover:scale-110" />
             <span>تبويب فاتورة خدمات غسيل (SRV)</span>
           </button>
           <button
@@ -390,13 +396,13 @@ export const PosView: React.FC<PosViewProps> = ({
             role="tab"
             aria-selected={mode === 'retail'}
             onClick={() => handleModeSwitch('retail')}
-            className={`px-4 py-2.5 rounded-t-lg text-xs font-bold flex items-center gap-2 transition-colors whitespace-nowrap border border-b-0 ${
+            className={`group px-4 py-2.5 rounded-t-lg text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap border border-b-0 ${
               mode === 'retail'
-                ? 'bg-teal-700 text-white border-teal-800'
+                ? 'bg-teal-700 text-white border-teal-800 shadow-xs'
                 : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
-            <Package className="w-4 h-4" />
+            <Package className="w-4 h-4 transition-transform group-hover:scale-110" />
             <span>تبويب فاتورة بيع منتجات منفردة (RTL)</span>
           </button>
         </div>
@@ -405,11 +411,11 @@ export const PosView: React.FC<PosViewProps> = ({
       {/* Main 2-Column Compact POS Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Multi-Select Checklist Catalog (7 cols) */}
-        <div className="lg:col-span-7 space-y-3">
+        <div className="lg:col-span-7 space-y-3.5">
           {/* Vehicle Tier Selector when in Service Mode */}
           {mode === 'service' && (
-            <div className="bg-white border border-slate-200 rounded-xl p-3.5">
-              <div className="text-xs font-bold text-slate-700 mb-2">
+            <div className="bg-sky-50/85 border border-sky-200 rounded-2xl p-3.5 shadow-sm">
+              <div className="text-xs font-bold text-slate-800 mb-2">
                 1. فئة السيارة (تتحدث الأسعار تلقائياً):
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -418,10 +424,10 @@ export const PosView: React.FC<PosViewProps> = ({
                     key={tier}
                     type="button"
                     onClick={() => handleTierChange(tier)}
-                    className={`py-2 px-2.5 rounded-lg border text-xs font-semibold transition-colors whitespace-nowrap ${
+                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition-all whitespace-nowrap ${
                       vehicleTier === tier
-                        ? 'bg-blue-700 text-white border-blue-700'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-blue-700 text-white border-blue-800 shadow-md ring-2 ring-blue-500/25'
+                        : 'bg-white/90 text-blue-800 border-blue-200 hover:bg-blue-50 hover:border-blue-400 shadow-xs'
                     }`}
                   >
                     {VEHICLE_TIER_LABELS[tier]}
@@ -432,10 +438,10 @@ export const PosView: React.FC<PosViewProps> = ({
           )}
 
           {/* Search & Category Filter */}
-          <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+          <div className="bg-stone-100/85 border border-stone-300/80 rounded-2xl p-3.5 shadow-sm space-y-2.5">
             <div className="flex flex-col sm:flex-row gap-2.5">
               <div className="relative flex-1">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={searchTerm}
@@ -445,11 +451,11 @@ export const PosView: React.FC<PosViewProps> = ({
                       ? 'ابحث عن خدمة غسيل أو تلميع...'
                       : 'ابحث باسم المنتج أو كود SKU...'
                   }
-                  className="w-full h-9 pr-9 pl-3 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full h-9 pr-9 pl-3 rounded-xl border border-stone-300 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
-              <div className="text-[11px] text-slate-500 flex items-center shrink-0">
-                تم اختيار <strong className="mx-1 font-mono-num text-slate-900">{activeCart.length}</strong> عنصر
+              <div className="text-[11px] text-stone-700 flex items-center shrink-0 bg-white/80 px-3 py-1 rounded-xl border border-stone-200">
+                تم اختيار <strong className="mx-1 font-mono-num text-blue-800">{activeCart.length}</strong> عنصر
               </div>
             </div>
 
@@ -458,11 +464,14 @@ export const PosView: React.FC<PosViewProps> = ({
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors whitespace-nowrap ${
+                  onClick={() => {
+                    playSoundEffect('click');
+                    setSelectedCategory(cat);
+                  }}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-semibold border transition-all whitespace-nowrap ${
                     selectedCategory === cat
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      ? 'bg-blue-700 text-white border-blue-800 shadow-xs ring-2 ring-blue-500/20'
+                      : 'bg-white/90 text-blue-800 border-blue-200 hover:bg-blue-50 hover:border-blue-400'
                   }`}
                 >
                   {cat}
@@ -471,9 +480,9 @@ export const PosView: React.FC<PosViewProps> = ({
             </div>
           </div>
 
-          {/* Compact Multi-Select Checkbox List (Distinct subtle tinted rows) */}
-          <div className="bg-white border border-slate-200 rounded-xl p-3">
-            <div className="text-xs font-bold text-slate-700 mb-2.5 px-1 flex items-center justify-between">
+          {/* Compact Multi-Select Checkbox List (Distinct soft tinted selectable cards with shadow & selection ring) */}
+          <div className="bg-white/95 border border-slate-200 rounded-2xl p-3.5 shadow-sm">
+            <div className="text-xs font-bold text-slate-800 mb-2.5 px-1 flex items-center justify-between">
               <span>
                 {mode === 'service'
                   ? '2. حدد خدمات الغسيل المطلوبة (يمكنك اختيار أكثر من خدمة):'
@@ -482,8 +491,11 @@ export const PosView: React.FC<PosViewProps> = ({
               {activeCart.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setActiveCart([])}
-                  className="text-[11px] font-medium text-red-600 hover:underline"
+                  onClick={() => {
+                    playSoundEffect('click');
+                    setActiveCart([]);
+                  }}
+                  className="text-[11px] font-bold text-red-600 hover:underline"
                 >
                   إلغاء تحديد الكل
                 </button>
@@ -491,7 +503,7 @@ export const PosView: React.FC<PosViewProps> = ({
             </div>
 
             {mode === 'service' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {filteredServices.map((svc) => {
                   const price = getServicePriceForTier(svc, vehicleTier);
                   const priceVat = calculatePriceWithVat(price, vatRate);
@@ -502,18 +514,18 @@ export const PosView: React.FC<PosViewProps> = ({
                       type="button"
                       onClick={() => toggleServiceSelection(svc)}
                       aria-pressed={isSelected}
-                      className={`text-right rounded-lg border px-3 py-2.5 transition-colors flex items-center justify-between gap-2.5 ${
+                      className={`group text-right rounded-xl border px-3 py-2.5 transition-all flex items-center justify-between gap-2.5 ${
                         isSelected
-                          ? 'bg-blue-50 border-blue-600'
-                          : 'bg-slate-50/90 border-slate-200 hover:bg-blue-50/40 hover:border-blue-300'
+                          ? 'bg-sky-100/90 border-blue-600 ring-2 ring-blue-500/25 shadow-md'
+                          : 'bg-sky-50/60 border-sky-200 hover:bg-sky-100/75 hover:border-blue-400 shadow-xs hover:shadow-sm'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span
-                          className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                          className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${
                             isSelected
-                              ? 'bg-blue-700 border-blue-700 text-white'
-                              : 'bg-white border-slate-300'
+                              ? 'bg-blue-700 border-blue-700 text-white scale-110'
+                              : 'bg-white border-blue-300 group-hover:border-blue-500'
                           }`}
                         >
                           {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -522,7 +534,7 @@ export const PosView: React.FC<PosViewProps> = ({
                           <div className="text-xs font-bold text-slate-900 truncate">
                             {svc.name_ar}
                           </div>
-                          <div className="text-[11px] text-slate-500">
+                          <div className="text-[11px] text-slate-600">
                             {svc.category} · <span className="font-mono-num">{svc.duration_minutes} د</span>
                           </div>
                         </div>
@@ -540,7 +552,7 @@ export const PosView: React.FC<PosViewProps> = ({
                 })}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {filteredProducts.map((prod) => {
                   const priceVat = calculatePriceWithVat(prod.selling_price, vatRate);
                   const outOfStock = prod.stock_qty <= 0;
@@ -558,20 +570,20 @@ export const PosView: React.FC<PosViewProps> = ({
                           toggleProductSelection(prod);
                         }
                       }}
-                      className={`text-right rounded-lg border px-3 py-2.5 transition-colors flex items-center justify-between gap-2.5 ${
+                      className={`group text-right rounded-xl border px-3 py-2.5 transition-all flex items-center justify-between gap-2.5 ${
                         outOfStock
                           ? 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed'
                           : isSelected
-                          ? 'bg-emerald-50 border-emerald-600 cursor-pointer'
-                          : 'bg-slate-50/90 border-slate-200 hover:bg-emerald-50/40 hover:border-emerald-300 cursor-pointer'
+                          ? 'bg-emerald-100/90 border-emerald-600 ring-2 ring-emerald-500/25 shadow-md cursor-pointer'
+                          : 'bg-emerald-50/55 border-emerald-200 hover:bg-emerald-100/70 hover:border-emerald-400 shadow-xs hover:shadow-sm cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span
-                          className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                          className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${
                             isSelected
-                              ? 'bg-emerald-700 border-emerald-700 text-white'
-                              : 'bg-white border-slate-300'
+                              ? 'bg-emerald-700 border-emerald-700 text-white scale-110'
+                              : 'bg-white border-emerald-300 group-hover:border-emerald-500'
                           }`}
                         >
                           {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -580,13 +592,13 @@ export const PosView: React.FC<PosViewProps> = ({
                           <div className="text-xs font-bold text-slate-900 truncate">
                             {prod.name_ar}
                           </div>
-                          <div className="text-[11px] text-slate-500 truncate">
+                          <div className="text-[11px] text-slate-600 truncate">
                             المتاح:{' '}
                             <strong
                               className={`font-mono-num ${
                                 prod.stock_qty <= prod.min_stock_alert
                                   ? 'text-red-600'
-                                  : 'text-slate-700'
+                                  : 'text-slate-800'
                               }`}
                             >
                               {prod.stock_qty} {prod.unit}
@@ -615,11 +627,13 @@ export const PosView: React.FC<PosViewProps> = ({
         {/* Compact Checkout & Invoice Builder Panel (5 cols) */}
         <form
           onSubmit={handleSubmit}
-          className="lg:col-span-5 bg-white border border-slate-200 rounded-xl overflow-hidden sticky top-20"
+          className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden sticky top-20"
         >
           <div
-            className={`px-4 py-3 border-b border-slate-200 flex items-center justify-between ${
-              mode === 'service' ? 'bg-blue-50/70' : 'bg-emerald-50/70'
+            className={`px-4 py-3 border-b flex items-center justify-between ${
+              mode === 'service'
+                ? 'bg-sky-100/80 border-sky-200'
+                : 'bg-emerald-100/80 border-emerald-200'
             }`}
           >
             <div className="flex items-center gap-2">
@@ -634,7 +648,7 @@ export const PosView: React.FC<PosViewProps> = ({
                   : 'ملخص فاتورة مبيعات المنتجات'}
               </h3>
             </div>
-            <span className="text-xs font-mono-num font-semibold text-slate-600">
+            <span className="text-xs font-mono-num font-bold text-slate-700 bg-white/80 px-2 py-0.5 rounded-md border border-slate-200">
               {activeCart.length} بند
             </span>
           </div>
@@ -946,13 +960,13 @@ export const PosView: React.FC<PosViewProps> = ({
             <button
               type="submit"
               disabled={submitting}
-              className={`w-full h-10 rounded-lg text-white text-xs font-bold transition-colors flex items-center justify-center gap-2 ${
+              className={`group btn-sheen w-full h-10 rounded-xl text-white text-xs font-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 ${
                 mode === 'service'
                   ? 'bg-blue-700 hover:bg-blue-800'
                   : 'bg-emerald-700 hover:bg-emerald-800'
               } disabled:opacity-60`}
             >
-              <Receipt className="w-4 h-4" />
+              <Receipt className="w-4 h-4 transition-transform group-hover:scale-110" />
               <span>
                 {submitting
                   ? 'جاري الحفظ...'

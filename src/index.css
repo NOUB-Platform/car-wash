@@ -10,13 +10,20 @@
   html {
     font-family: var(--font-sans);
     font-size: 14.5px;
-    background-color: #F8FAFC;
+    background-color: #EEF3F9;
     color: #0F172A;
     -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  select:not(:disabled),
+  a[href] {
+    cursor: pointer;
   }
 
   .font-mono-num {
@@ -27,6 +34,54 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+}
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(120%);
+  }
+  100% {
+    transform: translateX(-140%);
+  }
+}
+
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 100%
+  );
+  transform: translateX(120%);
+  pointer-events: none;
+}
+
+.btn-sheen:hover::after {
+  animation: shimmerSweep 0.75s ease-out;
+}
+
+.animate-toast-in {
+  animation: toastSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @media print {

@@ -64,9 +64,44 @@ export const StaffView: React.FC<StaffViewProps> = ({
     setEditingStaff(null);
   };
 
+  const getRoleCardStyle = (role: StaffRole) => {
+    switch (role) {
+      case 'washer':
+        return {
+          card: 'bg-sky-50/85 border-sky-200',
+          avatar: 'bg-sky-100 border-sky-300 text-blue-800',
+          box: 'bg-white/85 border-sky-200',
+        };
+      case 'detailer':
+        return {
+          card: 'bg-indigo-50/80 border-indigo-200',
+          avatar: 'bg-indigo-100 border-indigo-300 text-indigo-800',
+          box: 'bg-white/85 border-indigo-200',
+        };
+      case 'inventory_manager':
+        return {
+          card: 'bg-emerald-50/80 border-emerald-200',
+          avatar: 'bg-emerald-100 border-emerald-300 text-emerald-800',
+          box: 'bg-white/85 border-emerald-200',
+        };
+      case 'supervisor':
+        return {
+          card: 'bg-orange-50/80 border-orange-200',
+          avatar: 'bg-orange-100 border-orange-300 text-orange-800',
+          box: 'bg-white/85 border-orange-200',
+        };
+      default:
+        return {
+          card: 'bg-stone-100/85 border-stone-300',
+          avatar: 'bg-stone-200/80 border-stone-300 text-stone-800',
+          box: 'bg-white/85 border-stone-200',
+        };
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white/90 border border-slate-200/90 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
             طاقم العمل والأدوار والعمولات
@@ -88,9 +123,9 @@ export const StaffView: React.FC<StaffViewProps> = ({
               is_active: true,
             })
           }
-          className="h-10 px-4 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold flex items-center gap-2 shrink-0 whitespace-nowrap"
+          className="group btn-sheen h-10 px-4 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm hover:shadow transition-all flex items-center gap-2 shrink-0 whitespace-nowrap"
         >
-          <UserPlus className="w-4 h-4" />
+          <UserPlus className="w-4 h-4 transition-transform group-hover:scale-110" />
           <span>إضافة موظف جديد</span>
         </button>
       </div>
@@ -106,78 +141,83 @@ export const StaffView: React.FC<StaffViewProps> = ({
             handledRevenue,
             commissionEarned,
             estimatedTotalPay,
-          }) => (
-            <div
-              key={member.id}
-              className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between gap-4"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 text-slate-800 font-bold flex items-center justify-center shrink-0">
-                    {member.full_name.slice(0, 1)}
+          }) => {
+            const theme = getRoleCardStyle(member.role);
+            return (
+              <div
+                key={member.id}
+                className={`${theme.card} border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-xl border font-bold flex items-center justify-center shrink-0 shadow-xs ${theme.avatar}`}
+                    >
+                      {member.full_name.slice(0, 1)}
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900">
+                        {member.full_name}
+                      </h3>
+                      <p className="text-xs text-slate-600">
+                        {member.role_title_ar} ·{' '}
+                        <span className="font-mono-num">{member.phone}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingStaff(member)}
+                    className="group px-2.5 py-1 rounded-lg border border-blue-200 bg-white/90 hover:bg-blue-700 hover:text-white hover:border-blue-700 text-xs font-bold text-blue-700 shadow-xs transition-all"
+                  >
+                    تعديل
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-black/10 text-xs">
+                  <div>
+                    <span className="text-slate-600 block">عمليات غسيل</span>
+                    <strong className="font-mono-num text-sm text-slate-900">
+                      {washesCount}
+                    </strong>
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">
-                      {member.full_name}
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      {member.role_title_ar} ·{' '}
-                      <span className="font-mono-num">{member.phone}</span>
-                    </p>
+                    <span className="text-slate-600 block">فواتير صادرة</span>
+                    <strong className="font-mono-num text-sm text-slate-900">
+                      {issuedCount}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-600 block">مبيعات منتجات</span>
+                    <strong className="font-mono-num text-sm text-slate-900">
+                      {retailSalesCount}
+                    </strong>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setEditingStaff(member)}
-                  className="text-xs font-medium text-blue-700 hover:underline"
-                >
-                  تعديل
-                </button>
-              </div>
 
-              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 text-xs">
-                <div>
-                  <span className="text-slate-500 block">عمليات غسيل</span>
-                  <strong className="font-mono-num text-sm text-slate-900">
-                    {washesCount}
-                  </strong>
-                </div>
-                <div>
-                  <span className="text-slate-500 block">فواتير صادرة</span>
-                  <strong className="font-mono-num text-sm text-slate-900">
-                    {issuedCount}
-                  </strong>
-                </div>
-                <div>
-                  <span className="text-slate-500 block">مبيعات منتجات</span>
-                  <strong className="font-mono-num text-sm text-slate-900">
-                    {retailSalesCount}
-                  </strong>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">إيرادات منفذة (صافي)</span>
-                  <span className="font-mono-num font-semibold text-slate-900">
-                    {formatEGP(handledRevenue)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">
-                    العمولة المستحقة ({member.commission_rate}%)
-                  </span>
-                  <span className="font-mono-num font-semibold text-emerald-700">
-                    + {formatEGP(commissionEarned)}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-1.5 border-t border-slate-200 font-bold text-slate-900">
-                  <span>إجمالي المستحق (أساسي + عمولة)</span>
-                  <span className="font-mono-num">{formatEGP(estimatedTotalPay)}</span>
+                <div className={`${theme.box} border rounded-xl p-3 space-y-1 text-xs shadow-xs`}>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">إيرادات منفذة (صافي)</span>
+                    <span className="font-mono-num font-semibold text-slate-900">
+                      {formatEGP(handledRevenue)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">
+                      العمولة المستحقة ({member.commission_rate}%)
+                    </span>
+                    <span className="font-mono-num font-semibold text-emerald-700">
+                      + {formatEGP(commissionEarned)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between pt-1.5 border-t border-slate-200 font-bold text-slate-900">
+                    <span>إجمالي المستحق (أساسي + عمولة)</span>
+                    <span className="font-mono-num">{formatEGP(estimatedTotalPay)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )
+            );
+          }
         )}
       </div>
 

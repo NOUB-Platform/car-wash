@@ -64,7 +64,7 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
   return (
     <div className="space-y-5">
       {/* Header & Unmistakable Folder-Tab Strip */}
-      <div className="bg-white border border-slate-200 rounded-xl pt-3.5 px-4 overflow-hidden">
+      <div className="bg-white/95 border border-slate-200 rounded-2xl shadow-sm pt-3.5 px-4 overflow-hidden">
         <div className="pb-3">
           <h2 className="text-lg font-bold text-slate-900">سجل الفواتير والطباعة</h2>
           <p className="text-xs text-slate-600 mt-0.5">
@@ -82,9 +82,9 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
             role="tab"
             aria-selected={typeFilter === 'all'}
             onClick={() => setTypeFilter('all')}
-            className={`px-4 py-2 rounded-t-lg text-xs font-bold transition-colors whitespace-nowrap border border-b-0 ${
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold transition-all whitespace-nowrap border border-b-0 ${
               typeFilter === 'all'
-                ? 'bg-teal-700 text-white border-teal-800'
+                ? 'bg-teal-700 text-white border-teal-800 shadow-xs'
                 : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
@@ -95,9 +95,9 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
             role="tab"
             aria-selected={typeFilter === 'service'}
             onClick={() => setTypeFilter('service')}
-            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-all whitespace-nowrap border border-b-0 ${
               typeFilter === 'service'
-                ? 'bg-teal-700 text-white border-teal-800'
+                ? 'bg-teal-700 text-white border-teal-800 shadow-xs'
                 : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
@@ -109,9 +109,9 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
             role="tab"
             aria-selected={typeFilter === 'retail'}
             onClick={() => setTypeFilter('retail')}
-            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-all whitespace-nowrap border border-b-0 ${
               typeFilter === 'retail'
-                ? 'bg-teal-700 text-white border-teal-800'
+                ? 'bg-teal-700 text-white border-teal-800 shadow-xs'
                 : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
@@ -122,33 +122,33 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
       </div>
 
       {/* Filter & Summary Bar */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-stone-100/85 border border-stone-300/80 rounded-2xl shadow-sm p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="بحث برقم الفاتورة، اللوحة، العميل، أو اسم الموظف (مثل أحمد مجدي)..."
-            className="w-full h-9 pr-10 pl-4 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="w-full h-9 pr-10 pl-4 rounded-xl border border-stone-300 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-6 text-xs">
+        <div className="flex flex-wrap items-center gap-5 text-xs bg-white/80 px-3.5 py-2 rounded-xl border border-stone-200">
           <div>
-            <span className="text-slate-500">عدد الفواتير: </span>
+            <span className="text-slate-600">عدد الفواتير: </span>
             <strong className="font-mono-num text-slate-900">{summary.count}</strong>
           </div>
           <div>
-            <span className="text-slate-500">ضريبة 14%: </span>
+            <span className="text-slate-600">ضريبة 14%: </span>
             <strong className="font-mono-num text-slate-900">{formatEGP(summary.vat)}</strong>
           </div>
           <div>
-            <span className="text-slate-500">الإجمالي: </span>
-            <strong className="font-mono-num text-slate-900">{formatEGP(summary.total)}</strong>
+            <span className="text-slate-600">الإجمالي: </span>
+            <strong className="font-mono-num text-blue-800">{formatEGP(summary.total)}</strong>
           </div>
           <div>
-            <span className="text-slate-500">صافي الربح: </span>
+            <span className="text-slate-600">صافي الربح: </span>
             <strong className="font-mono-num text-emerald-700">
               {formatEGP(summary.profit)}
             </strong>
@@ -157,7 +157,7 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
       </div>
 
       {/* Ledger Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
@@ -257,9 +257,9 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
                       <button
                         type="button"
                         onClick={() => onPreviewInvoice(inv)}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 inline-flex items-center gap-1.5"
+                        className="group px-3 py-1.5 rounded-xl border border-blue-200 bg-sky-50/70 hover:bg-blue-700 hover:border-blue-700 text-xs font-semibold text-blue-700 hover:text-white inline-flex items-center gap-1.5 shadow-sm transition-all"
                       >
-                        <Printer className="w-3.5 h-3.5" />
+                        <Printer className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
                         <span>معاينة</span>
                       </button>
                     </td>

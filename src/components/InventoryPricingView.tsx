@@ -211,7 +211,7 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
   return (
     <div className="space-y-5">
       {/* Header & Unmistakable Folder-Tab Strip */}
-      <div className="bg-white border border-slate-200 rounded-xl pt-3.5 px-4 overflow-hidden">
+      <div className="bg-white/95 border border-slate-200 rounded-2xl shadow-sm pt-3.5 px-4 overflow-hidden">
         <div className="pb-3">
           <h2 className="text-lg font-bold text-slate-900">المخزن وتسعير الخدمات والمنتجات</h2>
           <p className="text-xs text-slate-600 mt-0.5">
@@ -229,9 +229,9 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
             role="tab"
             aria-selected={subTab === 'products'}
             onClick={() => setSubTab('products')}
-            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-all whitespace-nowrap border border-b-0 ${
               subTab === 'products'
-                ? 'bg-teal-700 text-white border-teal-800'
+                ? 'bg-teal-700 text-white border-teal-800 shadow-xs'
                 : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
@@ -243,9 +243,9 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
             role="tab"
             aria-selected={subTab === 'services'}
             onClick={() => setSubTab('services')}
-            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-all whitespace-nowrap border border-b-0 ${
               subTab === 'services'
-                ? 'bg-teal-700 text-white border-teal-800'
+                ? 'bg-teal-700 text-white border-teal-800 shadow-xs'
                 : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
@@ -257,9 +257,9 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
             role="tab"
             aria-selected={subTab === 'movements'}
             onClick={() => setSubTab('movements')}
-            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap border border-b-0 ${
+            className={`px-4 py-2 rounded-t-lg text-xs font-bold flex items-center gap-1.5 transition-all whitespace-nowrap border border-b-0 ${
               subTab === 'movements'
-                ? 'bg-teal-700 text-white border-teal-800'
+                ? 'bg-teal-700 text-white border-teal-800 shadow-xs'
                 : 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100'
             }`}
           >
@@ -272,22 +272,22 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
       {/* Sub-tab 1: Products & Cost/Profit Pricing */}
       {subTab === 'products' && (
         <div className="space-y-4">
-          <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-6 text-xs">
+          <div className="bg-emerald-50/75 border border-emerald-200 rounded-2xl shadow-sm p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-5 text-xs bg-white/85 px-3.5 py-2 rounded-xl border border-emerald-200">
               <div>
-                <span className="text-slate-500">إجمالي القطع بالمخزن: </span>
+                <span className="text-slate-600">إجمالي القطع بالمخزن: </span>
                 <strong className="font-mono-num text-slate-900">
                   {inventoryValuation.totalUnits} قطعة
                 </strong>
               </div>
               <div>
-                <span className="text-slate-500">قيمة المخزن بالتكلفة: </span>
+                <span className="text-slate-600">قيمة المخزن بالتكلفة: </span>
                 <strong className="font-mono-num text-slate-900">
                   {formatEGP(inventoryValuation.totalCost)}
                 </strong>
               </div>
               <div>
-                <span className="text-slate-500">القيمة البيعية (قبل الضريبة): </span>
+                <span className="text-slate-600">القيمة البيعية (قبل الضريبة): </span>
                 <strong className="font-mono-num text-emerald-700">
                   {formatEGP(inventoryValuation.totalRetail)}
                 </strong>
@@ -296,27 +296,27 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
 
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="بحث عن منتج أو SKU..."
-                  className="h-9 pr-9 pl-3 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="h-9 pr-9 pl-3 rounded-xl border border-emerald-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
               <button
                 type="button"
                 onClick={openNewProduct}
-                className="h-9 px-4 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap"
+                className="group btn-sheen h-9 px-4 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm hover:shadow transition-all flex items-center gap-1.5 whitespace-nowrap"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
                 <span>إضافة منتج جديد</span>
               </button>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
@@ -389,7 +389,7 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
                                 setAdjustType('restock');
                                 setAdjustQty(5);
                               }}
-                              className="px-2.5 py-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 text-xs font-medium text-slate-700"
+                              className="px-2.5 py-1 rounded-lg border border-blue-200 bg-sky-50/70 hover:bg-blue-700 hover:text-white hover:border-blue-700 text-xs font-semibold text-blue-700 transition-all"
                             >
                               توريد/صرف
                             </button>
@@ -397,9 +397,9 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
                               type="button"
                               onClick={() => setEditingProduct(prod)}
                               aria-label="تعديل المنتج"
-                              className="p-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-100 text-slate-600"
+                              className="group p-1.5 rounded-lg border border-blue-200 bg-sky-50/70 hover:bg-blue-700 hover:text-white hover:border-blue-700 text-blue-700 transition-all"
                             >
-                              <Edit3 className="w-3.5 h-3.5" />
+                              <Edit3 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
                             </button>
                           </div>
                         </td>
@@ -432,17 +432,17 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
                   is_active: true,
                 })
               }
-              className="h-9 px-4 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold flex items-center gap-1.5"
+              className="group btn-sheen h-9 px-4 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5 transition-all"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
               <span>إضافة خدمة غسيل جديدة</span>
             </button>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
+                <thead className="bg-sky-50/80 border-b border-sky-200 text-xs text-slate-700">
                   <tr>
                     <th className="py-3 px-4 text-right font-semibold">الخدمة</th>
                     <th className="py-3 px-4 text-right font-semibold">التصنيف</th>
@@ -456,7 +456,7 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {services.map((svc) => (
-                    <tr key={svc.id} className="hover:bg-slate-50/70">
+                    <tr key={svc.id} className="hover:bg-blue-50/45 transition-colors">
                       <td className="py-3 px-4">
                         <div className="font-semibold text-slate-900">{svc.name_ar}</div>
                         <div className="text-xs text-slate-500 font-mono-num">{svc.code}</div>
@@ -481,9 +481,9 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
                         <button
                           type="button"
                           onClick={() => setEditingService(svc)}
-                          className="p-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-100 text-slate-600"
+                          className="group p-1.5 rounded-lg border border-blue-200 bg-sky-50/70 hover:bg-blue-700 hover:text-white hover:border-blue-700 text-blue-700 transition-all"
                         >
-                          <Edit3 className="w-3.5 h-3.5" />
+                          <Edit3 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
                         </button>
                       </td>
                     </tr>
@@ -497,7 +497,7 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
 
       {/* Sub-tab 3: Stock Movements Audit */}
       {subTab === 'movements' && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
