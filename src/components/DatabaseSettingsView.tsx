@@ -4,6 +4,8 @@ import {
   Copy,
   Database,
   Download,
+  Eye,
+  EyeOff,
   Lock,
   RefreshCw,
   RotateCcw,
@@ -50,6 +52,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
   );
   const [testing, setTesting] = useState(false);
   const [pushing, setPushing] = useState(false);
+  const [showKey, setShowKey] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
 
   // Settings local form
@@ -90,10 +93,11 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
     setPushing(false);
   };
 
-  const handleDisconnectSupabase = () => {
+  const handleDisconnectSupabase = async () => {
     clearSupabaseConfig();
     setSbUrl('');
     setSbKey('');
+    await onSyncSupabase();
     setTestResult({
       ok: true,
       message: 'تم فصل الاتصال بـ Supabase والعودة للوضع المحلي التجريبي.',
@@ -156,19 +160,19 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
         <div className="space-y-1">
           <div className="font-bold text-blue-800">1. وضع التشغيل الحالي</div>
           <p className="text-slate-700 leading-relaxed">
-            التطبيق يعمل الآن مباشرة ببيانات تجريبية محفوظة في المتصفح (بأسماء أحمد مجدي ومحمود كمال) لتجربة كل الشاشات فوراً.
+            بدون إدخال رابط ومفتاح Supabase، يعمل التطبيق محلياً في المتصفح ولا يقرأ التعديلات اليدوية من لوحة Supabase.
           </p>
         </div>
         <div className="space-y-1">
-          <div className="font-bold text-blue-800">2. إنشاء الجداول في Supabase</div>
+          <div className="font-bold text-blue-800">2. مكان المفتاح في واجهة Supabase الجديدة</div>
           <p className="text-slate-700 leading-relaxed">
-            انسخ كود الـ SQL بالأسفل (أو من ملف <span className="font-mono-num">supabase/schema.sql</span>) والصقه داخل <strong>SQL Editor</strong> في Supabase ثم اضغط Run.
+            افتح <strong>Project Settings → API Keys</strong> وستجد <strong>Publishable key</strong> (يبدأ بـ <span className="font-mono-num">sb_publishable_</span>) بدلاً من anon، أو ستجد تبويب <strong>Legacy anon</strong> في نفس الصفحة.
           </p>
         </div>
         <div className="space-y-1">
-          <div className="font-bold text-blue-800">3. الربط والنشر على GitHub Pages</div>
+          <div className="font-bold text-blue-800">3. الربط الدائم مع GitHub Pages</div>
           <p className="text-slate-700 leading-relaxed">
-            أدخل <span className="font-mono-num">Project URL</span> و <span className="font-mono-num">Anon Key</span> هنا. وعند النشر على GitHub اختر من <strong>Settings → Pages → Source</strong> خيار <strong>GitHub Actions</strong> بدلاً من Branch.
+            تكامل GitHub داخل Supabase مخصص لفروع القاعدة فقط. لربط الموقع نهائياً أدخل الرابط والمفتاح هنا أو أضف <span className="font-mono-num">VITE_SUPABASE_URL</span> و <span className="font-mono-num">VITE_SUPABASE_ANON_KEY</span> في Secrets الخاص بالمستودع.
           </p>
         </div>
       </div>
@@ -199,9 +203,8 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
           </div>
 
           <p className="text-xs text-slate-600 leading-relaxed">
-            بعد إنشاء حساب ومشروع في Supabase وتشغيل كود SQL بالأسفل في{' '}
-            <strong>SQL Editor</strong>، الصق رابط المشروع ومفتاح{' '}
-            <span className="font-mono-num">anon public key</span> هنا للربط الفوري.
+            بعد تشغيل كود SQL بالأسفل في <strong>SQL Editor</strong>، الصق رابط المشروع ومفتاح{' '}
+            <strong>Publishable key</strong> (أو <span className="font-mono-num">anon key</span> القديم) واضغط اختبار وحفظ.
           </p>
 
           <div>
@@ -220,16 +223,26 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Supabase Anon Key
+              Supabase Publishable Key (أو Legacy Anon Key)
             </label>
-            <input
-              type="password"
-              dir="ltr"
-              value={sbKey}
-              onChange={(e) => setSbKey(e.target.value)}
-              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-              className="w-full h-10 px-3 rounded-lg border border-slate-200 text-xs font-mono-num"
-            />
+            <div className="relative">
+              <input
+                type={showKey ? 'text' : 'password'}
+                dir="ltr"
+                value={sbKey}
+                onChange={(e) => setSbKey(e.target.value)}
+                placeholder="sb_publishable_... أو eyJhbGciOi..."
+                className="w-full h-10 pl-3 pr-10 rounded-lg border border-slate-200 text-xs font-mono-num"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey((prev) => !prev)}
+                aria-label={showKey ? 'إخفاء المفتاح' : 'إظهار المفتاح'}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
+              >
+                {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           {testResult && (
@@ -261,6 +274,15 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
             </button>
             {supabaseConnected && (
               <>
+                <button
+                  type="button"
+                  disabled={syncing || pushing}
+                  onClick={() => onSyncSupabase()}
+                  className="px-3.5 py-2 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-semibold flex items-center gap-1.5 disabled:opacity-60"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+                  <span>جلب أحدث البيانات</span>
+                </button>
                 <button
                   type="button"
                   disabled={pushing || syncing}

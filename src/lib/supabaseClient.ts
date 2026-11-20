@@ -5,7 +5,10 @@ const SUPABASE_CONFIG_STORAGE_KEY = 'naqaa_supabase_config_v1';
 
 export function getSavedSupabaseConfig(): SupabaseConfig {
   const envUrl = import.meta.env.VITE_SUPABASE_URL || '';
-  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  const envKey =
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    '';
 
   try {
     const raw = localStorage.getItem(SUPABASE_CONFIG_STORAGE_KEY);
@@ -59,7 +62,16 @@ export async function testSupabaseConnection(
   if (!config.url.startsWith('https://') || !config.anonKey) {
     return {
       ok: false,
-      message: 'تأكد من إدخال رابط المشروع (https://...) ومفتاح Anon Key بشكل صحيح.',
+      message:
+        'تأكد من إدخال رابط المشروع (https://...) ومفتاح Publishable Key (أو Anon Key) بشكل صحيح.',
+    };
+  }
+
+  if (config.anonKey.trim().startsWith('sb_secret_')) {
+    return {
+      ok: false,
+      message:
+        'تحذير أمني: هذا مفتاح Secret Key مخصص للسيرفر فقط. استخدم Publishable Key (sb_publishable_...) أو Legacy anon key.',
     };
   }
 
@@ -76,6 +88,16 @@ export async function testSupabaseConnection(
           ok: false,
           message:
             'تم الاتصال بـ Supabase لكن الجداول غير موجودة بعد. انسخ كود SQL وشغّله في SQL Editor أولاً.',
+        };
+      }
+      if (
+        error.message.toLowerCase().includes('invalid api key') ||
+        error.message.toLowerCase().includes('jwt')
+      ) {
+        return {
+          ok: false,
+          message:
+            'المفتاح غير صحيح. تأكد من نسخ Publishable key (sb_publishable_...) أو Legacy anon key من Project Settings → API Keys.',
         };
       }
       return { ok: false, message: `خطأ من Supabase: ${error.message}` };

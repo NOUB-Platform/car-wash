@@ -7,6 +7,7 @@ import {
   Menu,
   Package,
   Receipt,
+  RefreshCw,
   Settings,
   ShieldCheck,
   ShoppingCart,
@@ -193,8 +194,22 @@ export function App() {
             <div>
               ضريبة القيمة المضافة: <strong className="font-mono-num">{store.settings.vat_rate}%</strong>
             </div>
-            <div>
-              المخزن: {store.supabaseConnected ? 'متصل بـ Supabase' : 'تخزين محلي تجريبي'}
+            <div className="flex items-center justify-between gap-2">
+              <span>
+                المخزن: {store.supabaseConnected ? 'متصل بـ Supabase' : 'تخزين محلي تجريبي'}
+              </span>
+              {store.supabaseConnected && (
+                <button
+                  type="button"
+                  onClick={() => store.syncFromSupabase()}
+                  disabled={store.syncing}
+                  title="جلب أحدث البيانات من Supabase"
+                  className="text-blue-700 hover:text-blue-900 font-semibold flex items-center gap-1 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3 h-3 ${store.syncing ? 'animate-spin' : ''}`} />
+                  <span>تحديث</span>
+                </button>
+              )}
             </div>
           </div>
 

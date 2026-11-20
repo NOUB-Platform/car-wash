@@ -167,7 +167,10 @@ export function useCarWashStore() {
         staffRes.error ||
         servicesRes.error ||
         productsRes.error ||
-        invoicesRes.error;
+        customersRes.error ||
+        invoicesRes.error ||
+        itemsRes.error ||
+        movementsRes.error;
 
       if (firstError) {
         throw new Error(firstError.message);
@@ -250,6 +253,13 @@ export function useCarWashStore() {
         completed_at: (inv.completed_at as string | null) ?? null,
       }));
 
+      const dbInitialized = Boolean(
+        settingsRes.data ||
+          (staffRes.data && staffRes.data.length > 0) ||
+          (customersRes.data && customersRes.data.length > 0) ||
+          mappedProducts.length > 0
+      );
+
       setState((prev) => ({
         settings: settingsRes.data
           ? {
@@ -273,12 +283,20 @@ export function useCarWashStore() {
           servicesRes.data && servicesRes.data.length > 0
             ? (servicesRes.data as WashService[])
             : prev.services,
-        products: mappedProducts.length > 0 ? mappedProducts : prev.products,
+        products:
+          mappedProducts.length > 0
+            ? mappedProducts
+            : dbInitialized
+            ? []
+            : prev.products,
         customers:
-          customersRes.data && customersRes.data.length > 0
+          customersRes.data && (dbInitialized || customersRes.data.length > 0)
             ? (customersRes.data as Customer[])
             : prev.customers,
-        invoices: mappedInvoices.length > 0 ? mappedInvoices : prev.invoices,
+        invoices:
+          mappedInvoices.length > 0 || dbInitialized
+            ? mappedInvoices
+            : prev.invoices,
         stockMovements: (movementsRes.data || []).map((m: Record<string, unknown>) => ({
           id: String(m.id),
           product_id: String(m.product_id),
@@ -305,10 +323,29 @@ export function useCarWashStore() {
   }, []);
 
   useEffect(() => {
-    const config = getSavedSupabaseConfig();
-    if (config.url && config.anonKey) {
+    let lastSyncAt = 0;
+    const runSyncIfConfigured = () => {
+      const config = getSavedSupabaseConfig();
+      if (!config.url || !config.anonKey) return;
+      const now = Date.now();
+      if (now - lastSyncAt < 4000) return;
+      lastSyncAt = now;
       syncFromSupabase();
-    }
+    };
+
+    runSyncIfConfigured();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        runSyncIfConfigured();
+      }
+    };
+    window.addEventListener('focus', runSyncIfConfigured);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', runSyncIfConfigured);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [syncFromSupabase]);
 
   const createInvoice = useCallback(
