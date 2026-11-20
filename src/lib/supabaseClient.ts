@@ -54,6 +54,9 @@ export function clearSupabaseConfig(): void {
   localStorage.removeItem(SUPABASE_CONFIG_STORAGE_KEY);
 }
 
+let cachedClientKey = '';
+let cachedClient: SupabaseClient | null = null;
+
 export function buildSupabaseClient(config?: SupabaseConfig): SupabaseClient | null {
   const active = config
     ? {
@@ -64,12 +67,20 @@ export function buildSupabaseClient(config?: SupabaseConfig): SupabaseClient | n
   if (!active.url || !active.anonKey) {
     return null;
   }
+  const cacheSignature = `${active.url}|${active.anonKey}`;
+  if (cachedClient && cachedClientKey === cacheSignature) {
+    return cachedClient;
+  }
   try {
-    return createClient(active.url, active.anonKey, {
+    cachedClient = createClient(active.url, active.anonKey, {
       auth: {
         persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
       },
     });
+    cachedClientKey = cacheSignature;
+    return cachedClient;
   } catch {
     return null;
   }

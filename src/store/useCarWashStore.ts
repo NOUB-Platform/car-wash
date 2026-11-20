@@ -42,6 +42,40 @@ interface PersistedState {
   stockMovements: StockMovement[];
 }
 
+const LEGACY_BUSINESS_NAMES = new Set([
+  'ووش كير للعناية بالسيارات',
+  'ووش كير',
+  'نقاء أوتو كير',
+]);
+const LEGACY_BRANCH_NAMES = new Set([
+  'فرع مدينة نصر - القاهرة',
+  'فرع أول الهرم - الجيزة',
+]);
+
+function normalizeBrandSettings(raw: AppSettings): AppSettings {
+  const businessName = LEGACY_BUSINESS_NAMES.has(raw.business_name?.trim())
+    ? INITIAL_SETTINGS.business_name
+    : raw.business_name || INITIAL_SETTINGS.business_name;
+  const branchName = LEGACY_BRANCH_NAMES.has(raw.branch_name?.trim())
+    ? INITIAL_SETTINGS.branch_name
+    : raw.branch_name || INITIAL_SETTINGS.branch_name;
+  const address =
+    !raw.address?.trim() || raw.address.includes('مدينة نصر')
+      ? INITIAL_SETTINGS.address
+      : raw.address;
+  const footerService = raw.receipt_footer_service?.includes('ووش كير')
+    ? INITIAL_SETTINGS.receipt_footer_service
+    : raw.receipt_footer_service || INITIAL_SETTINGS.receipt_footer_service;
+
+  return {
+    ...raw,
+    business_name: businessName,
+    branch_name: branchName,
+    address,
+    receipt_footer_service: footerService,
+  };
+}
+
 function loadInitialState(): PersistedState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -49,7 +83,7 @@ function loadInitialState(): PersistedState {
       const parsed = JSON.parse(raw) as Partial<PersistedState>;
       if (parsed.staff && parsed.products && parsed.invoices) {
         return {
-          settings: { ...INITIAL_SETTINGS, ...(parsed.settings || {}) },
+          settings: normalizeBrandSettings({ ...INITIAL_SETTINGS, ...(parsed.settings || {}) }),
           staff: parsed.staff,
           services: parsed.services || INITIAL_SERVICES,
           products: parsed.products,
@@ -262,7 +296,7 @@ export function useCarWashStore() {
 
       setState((prev) => ({
         settings: settingsRes.data
-          ? {
+          ? normalizeBrandSettings({
               id: String(settingsRes.data.id),
               business_name: String(settingsRes.data.business_name),
               branch_name: String(settingsRes.data.branch_name),
@@ -273,7 +307,7 @@ export function useCarWashStore() {
               phone: String(settingsRes.data.phone || ''),
               receipt_footer_service: String(settingsRes.data.receipt_footer_service || ''),
               receipt_footer_retail: String(settingsRes.data.receipt_footer_retail || ''),
-            }
+            })
           : prev.settings,
         staff:
           staffRes.data && staffRes.data.length > 0

@@ -227,7 +227,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-sky-200/80 bg-white/80">
+            <div className="divide-y divide-sky-200/80 bg-white/80 max-h-[360px] overflow-y-auto">
               {activeWashQueue.map((inv) => {
                 const action = getNextStatus(inv.status);
                 return (
@@ -325,7 +325,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               جميع أصناف المخزن متوفرة بكميات آمنة.
             </div>
           ) : (
-            <div className="divide-y divide-orange-200/80 bg-white/80">
+            <div className="divide-y divide-orange-200/80 bg-white/80 max-h-[360px] overflow-y-auto">
               {lowStockProducts.map((prod) => (
                 <div key={prod.id} className="p-4 flex items-center justify-between gap-3 hover:bg-orange-50/70 transition-colors">
                   <div>
@@ -365,9 +365,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-auto max-h-[340px]">
           <table className="w-full text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
+            <thead className="bg-slate-100 border-b border-slate-200 text-[11px] text-slate-700 sticky top-0 z-10 shadow-[0_1px_0_0_#e2e8f0]">
               <tr>
                 <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">رقم الفاتورة</th>
                 <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">النوع</th>

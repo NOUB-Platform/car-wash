@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { CarFront, Eye, EyeOff, Lock, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Lock, ShieldCheck } from 'lucide-react';
 import studioImg from '../assets/images/clean_carwash_studio_1795127894234.jpg';
+import { BrandLogo } from './BrandLogo';
 
 interface PasscodeLockScreenProps {
   businessName: string;
@@ -42,19 +43,17 @@ export const PasscodeLockScreen: React.FC<PasscodeLockScreenProps> = ({
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-5xl bg-white border border-slate-200 rounded-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
+      <div className="w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
         {/* Right Column (RTL first): Passcode Form */}
         <div className="lg:col-span-6 p-8 md:p-12 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 rounded-lg bg-blue-700 text-white flex items-center justify-center shrink-0">
-                <CarFront className="w-5 h-5" />
-              </div>
+              <BrandLogo size="lg" />
               <div>
                 <h1 className="text-xl font-bold text-slate-900 leading-tight">
                   {businessName}
                 </h1>
-                <p className="text-xs text-slate-500 mt-0.5">{branchName}</p>
+                <p className="text-xs text-slate-600 mt-0.5">{branchName}</p>
               </div>
             </div>
 
@@ -82,7 +81,9 @@ export const PasscodeLockScreen: React.FC<PasscodeLockScreenProps> = ({
                 <div className="relative">
                   <input
                     id="access-passcode"
+                    name="access-passcode"
                     type={showPasscode ? 'text' : 'password'}
+                    autoComplete="current-password"
                     value={passcode}
                     onChange={(e) => {
                       setError(null);
@@ -91,7 +92,7 @@ export const PasscodeLockScreen: React.FC<PasscodeLockScreenProps> = ({
                     placeholder="أدخل رمز الدخول..."
                     autoFocus
                     dir="ltr"
-                    className="w-full h-12 px-4 pl-12 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 text-center font-mono-num text-lg tracking-widest focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+                    className="w-full h-12 px-4 pl-12 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 text-center font-mono-num text-lg tracking-widest focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
                   />
                   <button
                     type="button"
@@ -154,13 +155,12 @@ export const PasscodeLockScreen: React.FC<PasscodeLockScreenProps> = ({
             <img
               src={studioImg}
               alt="صالة العناية وغسيل السيارات الحديثة"
-              referrerPolicy="no-referrer"
               onError={() => setImgError(true)}
-              className="w-full h-full object-cover lg:h-full"
+              className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-gradient-to-br from-slate-100 to-blue-50 text-slate-500">
-              <CarFront className="w-16 h-16 text-blue-700 mb-3" />
+              <BrandLogo size="lg" className="mb-3" />
               <p className="text-sm font-semibold text-slate-700">{businessName}</p>
             </div>
           )}

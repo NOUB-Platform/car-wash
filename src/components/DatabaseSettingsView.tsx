@@ -129,7 +129,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'naqaa_carwash_supabase_schema.sql';
+    a.download = 'alahram_care_supabase_schema.sql';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -222,12 +222,18 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
           </p>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label
+              htmlFor="sb-project-url"
+              className="block text-xs font-semibold text-slate-700 mb-1"
+            >
               Supabase Project URL
             </label>
             <input
+              id="sb-project-url"
+              name="sb-project-url"
               type="url"
               dir="ltr"
+              autoComplete="url"
               value={sbUrl}
               onChange={(e) => setSbUrl(e.target.value)}
               placeholder="https://xxxxxxxxxxxx.supabase.co"
@@ -236,13 +242,19 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label
+              htmlFor="sb-api-key"
+              className="block text-xs font-semibold text-slate-700 mb-1"
+            >
               Supabase Publishable Key (أو Legacy Anon Key)
             </label>
             <div className="relative">
               <input
+                id="sb-api-key"
+                name="sb-api-key"
                 type={showKey ? 'text' : 'password'}
                 dir="ltr"
+                autoComplete="off"
                 value={sbKey}
                 onChange={(e) => setSbKey(e.target.value)}
                 placeholder="sb_publishable_... أو eyJhbGciOi..."
@@ -360,10 +372,15 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="settings-business-name"
+                className="block text-xs font-semibold text-slate-700 mb-1"
+              >
                 اسم المغسلة / المركز
               </label>
               <input
+                id="settings-business-name"
+                name="business-name"
                 type="text"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
@@ -371,10 +388,15 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                الفرع
+              <label
+                htmlFor="settings-branch-name"
+                className="block text-xs font-semibold text-slate-700 mb-1"
+              >
+                الفرع / العنوان
               </label>
               <input
+                id="settings-branch-name"
+                name="branch-name"
                 type="text"
                 value={branchName}
                 onChange={(e) => setBranchName(e.target.value)}
@@ -385,10 +407,15 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="settings-tax-no"
+                className="block text-xs font-semibold text-slate-700 mb-1"
+              >
                 السجل الضريبي
               </label>
               <input
+                id="settings-tax-no"
+                name="tax-no"
                 type="text"
                 dir="ltr"
                 value={taxNo}
@@ -397,10 +424,15 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="settings-vat-rate"
+                className="block text-xs font-semibold text-slate-700 mb-1"
+              >
                 نسبة الضريبة (%)
               </label>
               <input
+                id="settings-vat-rate"
+                name="vat-rate"
                 type="number"
                 step="0.5"
                 min={0}
@@ -411,12 +443,18 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label
+                htmlFor="settings-terminal-passcode"
+                className="block text-xs font-semibold text-slate-700 mb-1"
+              >
                 رمز شاشة الدخول
               </label>
               <input
+                id="settings-terminal-passcode"
+                name="terminal-passcode"
                 type="text"
                 dir="ltr"
+                autoComplete="off"
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
                 className="w-full h-9 px-3 rounded-xl border border-stone-300 bg-white text-xs font-mono-num shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"

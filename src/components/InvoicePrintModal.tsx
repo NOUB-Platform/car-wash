@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { ArrowRight, CarFront, Package, Printer, X } from 'lucide-react';
 import { AppSettings, Invoice, StaffMember } from '../types/carwash';
+import { BrandLogo } from './BrandLogo';
 import {
   formatDateTimeAr,
   formatEGP,
@@ -111,21 +112,24 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                 : 'bg-emerald-50/70 border-emerald-200'
             }`}
           >
-            <div>
-              <p
-                className={`text-xs font-bold mb-0.5 ${
-                  isService ? 'text-blue-700' : 'text-emerald-700'
-                }`}
-              >
-                {isService
-                  ? 'فاتورة خدمات غسيل وعناية بالسيارات'
-                  : 'فاتورة مبيعات منتجات ومستلزمات سيارات'}
-              </p>
-              <h2 className="text-lg font-bold text-slate-900">{settings.business_name}</h2>
-              <p className="text-[11px] text-slate-600 mt-0.5">
-                {settings.branch_name} · السجل الضريبي:{' '}
-                <span className="font-mono-num">{settings.tax_registration_no}</span>
-              </p>
+            <div className="flex items-center gap-3">
+              <BrandLogo size="md" />
+              <div>
+                <p
+                  className={`text-xs font-bold mb-0.5 ${
+                    isService ? 'text-blue-700' : 'text-emerald-700'
+                  }`}
+                >
+                  {isService
+                    ? 'فاتورة خدمات غسيل وعناية بالسيارات'
+                    : 'فاتورة مبيعات منتجات ومستلزمات سيارات'}
+                </p>
+                <h2 className="text-lg font-bold text-slate-900">{settings.business_name}</h2>
+                <p className="text-[11px] text-slate-600 mt-0.5">
+                  {settings.address || settings.branch_name} · السجل الضريبي:{' '}
+                  <span className="font-mono-num">{settings.tax_registration_no}</span>
+                </p>
+              </div>
             </div>
             <div className="text-right sm:text-left">
               <div className="text-[11px] text-slate-500">رقم الفاتورة</div>

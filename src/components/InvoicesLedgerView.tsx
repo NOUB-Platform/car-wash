@@ -126,7 +126,10 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2" />
           <input
+            id="invoices-search"
+            name="invoices-search"
             type="text"
+            aria-label="بحث في سجل الفواتير"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="بحث برقم الفاتورة، اللوحة، العميل، أو اسم الموظف (مثل أحمد مجدي)..."
@@ -156,11 +159,11 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
         </div>
       </div>
 
-      {/* Ledger Table */}
+      {/* Ledger Table (Vertical + Horizontal Inner Scroll) */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-auto max-h-[calc(100vh-315px)] min-h-[280px]">
           <table className="w-full text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
+            <thead className="bg-slate-100 border-b border-slate-200 text-[11px] text-slate-700 sticky top-0 z-10 shadow-[0_1px_0_0_#e2e8f0]">
               <tr>
                 <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">رقم الفاتورة</th>
                 <th className="py-2.5 px-3 text-right font-semibold whitespace-nowrap">التصنيف</th>
@@ -222,6 +225,9 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
                     <td className="py-2.5 px-3 whitespace-nowrap">
                       {inv.invoice_type === 'service' && inv.status !== 'completed' ? (
                         <select
+                          id={`status-${inv.id}`}
+                          name={`status-${inv.id}`}
+                          aria-label={`تغيير حالة الفاتورة ${inv.invoice_number}`}
                           value={inv.status}
                           onChange={(e) =>
                             onUpdateStatus(inv.id, e.target.value as InvoiceStatus)

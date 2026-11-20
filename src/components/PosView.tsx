@@ -443,7 +443,10 @@ export const PosView: React.FC<PosViewProps> = ({
               <div className="relative flex-1">
                 <Search className="w-3.5 h-3.5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
                 <input
+                  id="pos-catalog-search"
+                  name="pos-catalog-search"
                   type="text"
+                  aria-label="بحث في خدمات الغسيل أو المنتجات"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={
@@ -559,23 +562,18 @@ export const PosView: React.FC<PosViewProps> = ({
                   const cartItem = retailCart.find((i) => i.product_id === prod.id);
                   const isSelected = Boolean(cartItem);
                   return (
-                    <div
+                    <button
                       key={prod.id}
+                      type="button"
+                      disabled={outOfStock}
+                      aria-pressed={isSelected}
                       onClick={() => !outOfStock && toggleProductSelection(prod)}
-                      role="button"
-                      tabIndex={outOfStock ? -1 : 0}
-                      onKeyDown={(e) => {
-                        if ((e.key === 'Enter' || e.key === ' ') && !outOfStock) {
-                          e.preventDefault();
-                          toggleProductSelection(prod);
-                        }
-                      }}
                       className={`group text-right rounded-xl border px-3 py-2.5 transition-all flex items-center justify-between gap-2.5 ${
                         outOfStock
                           ? 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed'
                           : isSelected
-                          ? 'bg-emerald-100/90 border-emerald-600 ring-2 ring-emerald-500/25 shadow-md cursor-pointer'
-                          : 'bg-emerald-50/55 border-emerald-200 hover:bg-emerald-100/70 hover:border-emerald-400 shadow-xs hover:shadow-sm cursor-pointer'
+                          ? 'bg-emerald-100/90 border-emerald-600 ring-2 ring-emerald-500/25 shadow-md'
+                          : 'bg-emerald-50/55 border-emerald-200 hover:bg-emerald-100/70 hover:border-emerald-400 shadow-xs hover:shadow-sm'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -616,7 +614,7 @@ export const PosView: React.FC<PosViewProps> = ({
                           +{vatRate}%: {formatEGP(priceVat)}
                         </div>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -627,7 +625,7 @@ export const PosView: React.FC<PosViewProps> = ({
         {/* Compact Checkout & Invoice Builder Panel (5 cols) */}
         <form
           onSubmit={handleSubmit}
-          className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden sticky top-20"
+          className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden lg:sticky lg:top-0"
         >
           <div
             className={`px-4 py-3 border-b flex items-center justify-between ${
@@ -657,6 +655,8 @@ export const PosView: React.FC<PosViewProps> = ({
             {/* Quick Customer Picker */}
             <div>
               <select
+                id="pos-customer-select"
+                name="pos-customer-select"
                 value={selectedCustomerId}
                 onChange={(e) => handleSelectCustomer(e.target.value)}
                 aria-label="اختيار عميل مسجل"
@@ -673,11 +673,17 @@ export const PosView: React.FC<PosViewProps> = ({
 
             <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                <label
+                  htmlFor="pos-customer-name"
+                  className="block text-[11px] font-semibold text-slate-600 mb-1"
+                >
                   اسم العميل
                 </label>
                 <input
+                  id="pos-customer-name"
+                  name="pos-customer-name"
                   type="text"
+                  autoComplete="name"
                   value={customerName}
                   onChange={(e) => {
                     setCustomerName(e.target.value);
@@ -688,11 +694,17 @@ export const PosView: React.FC<PosViewProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                <label
+                  htmlFor="pos-customer-phone"
+                  className="block text-[11px] font-semibold text-slate-600 mb-1"
+                >
                   رقم الهاتف
                 </label>
                 <input
-                  type="text"
+                  id="pos-customer-phone"
+                  name="pos-customer-phone"
+                  type="tel"
+                  autoComplete="tel"
                   dir="ltr"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
@@ -705,6 +717,8 @@ export const PosView: React.FC<PosViewProps> = ({
             {!selectedCustomerId && customerName.trim().length > 0 && (
               <label className="flex items-center gap-2 text-[11px] text-slate-700 cursor-pointer select-none">
                 <input
+                  id="pos-save-customer"
+                  name="pos-save-customer"
                   type="checkbox"
                   checked={saveCustomer}
                   onChange={(e) => setSaveCustomer(e.target.checked)}
@@ -718,10 +732,15 @@ export const PosView: React.FC<PosViewProps> = ({
             {mode === 'service' && (
               <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-200">
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                  <label
+                    htmlFor="pos-car-model"
+                    className="block text-[10px] font-semibold text-slate-600 mb-1"
+                  >
                     موديل السيارة
                   </label>
                   <input
+                    id="pos-car-model"
+                    name="pos-car-model"
                     type="text"
                     value={carModel}
                     onChange={(e) => setCarModel(e.target.value)}
@@ -730,10 +749,15 @@ export const PosView: React.FC<PosViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                  <label
+                    htmlFor="pos-car-plate"
+                    className="block text-[10px] font-semibold text-slate-600 mb-1"
+                  >
                     رقم اللوحة
                   </label>
                   <input
+                    id="pos-car-plate"
+                    name="pos-car-plate"
                     type="text"
                     value={carPlate}
                     onChange={(e) => setCarPlate(e.target.value)}
@@ -742,10 +766,15 @@ export const PosView: React.FC<PosViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                  <label
+                    htmlFor="pos-wash-bay"
+                    className="block text-[10px] font-semibold text-slate-600 mb-1"
+                  >
                     الحارة
                   </label>
                   <select
+                    id="pos-wash-bay"
+                    name="pos-wash-bay"
                     value={washBay}
                     onChange={(e) => setWashBay(e.target.value)}
                     className="w-full h-8 px-1.5 rounded-md border border-slate-200 bg-white text-[11px]"
@@ -763,12 +792,17 @@ export const PosView: React.FC<PosViewProps> = ({
             {/* Staff Accountability */}
             <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                <label
+                  htmlFor={mode === 'service' ? 'pos-washer-id' : 'pos-seller-id'}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 mb-1"
+                >
                   <UserCheck className="w-3 h-3 text-slate-400" />
                   <span>{mode === 'service' ? 'القائم بالغسيل' : 'البائع / المخزن'}</span>
                 </label>
                 {mode === 'service' ? (
                   <select
+                    id="pos-washer-id"
+                    name="pos-washer-id"
                     value={performedByWasherId}
                     onChange={(e) => setPerformedByWasherId(e.target.value)}
                     className="w-full h-8 px-2 rounded-lg border border-slate-200 text-xs bg-white"
@@ -781,6 +815,8 @@ export const PosView: React.FC<PosViewProps> = ({
                   </select>
                 ) : (
                   <select
+                    id="pos-seller-id"
+                    name="pos-seller-id"
                     value={performedBySellerId}
                     onChange={(e) => setPerformedBySellerId(e.target.value)}
                     className="w-full h-8 px-2 rounded-lg border border-slate-200 text-xs bg-white"
@@ -795,10 +831,15 @@ export const PosView: React.FC<PosViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                <label
+                  htmlFor="pos-cashier-id"
+                  className="block text-[11px] font-semibold text-slate-600 mb-1"
+                >
                   الكاشير (مصدر الفاتورة)
                 </label>
                 <select
+                  id="pos-cashier-id"
+                  name="pos-cashier-id"
                   value={createdByCashierId}
                   onChange={(e) => setCreatedByCashierId(e.target.value)}
                   className="w-full h-8 px-2 rounded-lg border border-slate-200 text-xs bg-white"
@@ -872,10 +913,15 @@ export const PosView: React.FC<PosViewProps> = ({
             {/* Discount & Payment Method */}
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                <label
+                  htmlFor="pos-discount-type"
+                  className="block text-[10px] font-semibold text-slate-600 mb-1"
+                >
                   الخصم
                 </label>
                 <select
+                  id="pos-discount-type"
+                  name="pos-discount-type"
                   value={discountType}
                   onChange={(e) => {
                     const next = e.target.value as DiscountType;
@@ -890,10 +936,15 @@ export const PosView: React.FC<PosViewProps> = ({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                <label
+                  htmlFor="pos-discount-value"
+                  className="block text-[10px] font-semibold text-slate-600 mb-1"
+                >
                   القيمة
                 </label>
                 <input
+                  id="pos-discount-value"
+                  name="pos-discount-value"
                   type="number"
                   min={0}
                   step="any"
@@ -904,10 +955,15 @@ export const PosView: React.FC<PosViewProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                <label
+                  htmlFor="pos-payment-method"
+                  className="block text-[10px] font-semibold text-slate-600 mb-1"
+                >
                   طريقة الدفع
                 </label>
                 <select
+                  id="pos-payment-method"
+                  name="pos-payment-method"
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
                   className="w-full h-8 px-2 rounded-lg border border-slate-200 text-xs bg-white"
@@ -922,7 +978,10 @@ export const PosView: React.FC<PosViewProps> = ({
             </div>
 
             <input
+              id="pos-invoice-notes"
+              name="pos-invoice-notes"
               type="text"
+              aria-label="ملاحظات الفاتورة"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="ملاحظات الفاتورة (اختياري)..."

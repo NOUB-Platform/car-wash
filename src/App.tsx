@@ -21,6 +21,7 @@ import {
   VolumeX,
   X,
 } from 'lucide-react';
+import { BrandLogo } from './components/BrandLogo';
 import { DashboardView } from './components/DashboardView';
 import { DatabaseSettingsView } from './components/DatabaseSettingsView';
 import { InventoryPricingView } from './components/InventoryPricingView';
@@ -219,30 +220,29 @@ export function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#EEF3F9] text-slate-900 flex flex-col lg:flex-row">
-      {/* Sidebar Navigation (Collapsible on Desktop & Drawer on Mobile) */}
+    <div className="h-screen overflow-hidden bg-[#EEF3F9] text-slate-900 flex flex-col lg:flex-row">
+      {/* Sidebar Navigation (Fixed Viewport Height, Collapsible on Desktop & Drawer on Mobile) */}
       <aside
-        className={`no-print fixed inset-y-0 right-0 z-40 bg-gradient-to-b from-[#E6F0FD] via-[#EDF4FE] to-[#E2ECFB] border-l border-blue-200/90 shadow-md lg:shadow-sm flex flex-col justify-between transition-all duration-200 lg:static lg:translate-x-0 ${
+        className={`no-print fixed inset-y-0 right-0 z-40 h-full lg:h-screen lg:shrink-0 overflow-y-auto bg-gradient-to-b from-[#E6F0FD] via-[#EDF4FE] to-[#E2ECFB] border-l border-blue-200/90 shadow-md lg:shadow-sm flex flex-col justify-between transition-all duration-200 lg:static lg:translate-x-0 ${
           sidebarCollapsed ? 'w-64 lg:w-[74px]' : 'w-64'
         } ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}
       >
         <div>
-          <div className="h-14 px-3 border-b border-blue-200/80 flex items-center justify-between gap-2">
+          <div className="h-14 px-3 border-b border-blue-200/80 flex items-center justify-between gap-2 sticky top-0 bg-[#E6F0FD]/95 backdrop-blur-xs z-10">
             <div
               className={`flex items-center gap-2.5 min-w-0 ${
                 sidebarCollapsed ? 'lg:justify-center lg:w-full' : ''
               }`}
             >
-              <div className="w-8 h-8 rounded-lg bg-blue-700 text-white shadow-sm flex items-center justify-center shrink-0 btn-sheen">
-                <CarFront className="w-4 h-4" />
+              <BrandLogo size="sm" className="btn-sheen" />
+              <div className={`min-w-0 ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
+                <div className="font-bold text-slate-900 text-sm truncate leading-tight">
+                  {store.settings.business_name}
+                </div>
+                <div className="text-[10px] text-blue-800/80 truncate">
+                  {store.settings.address || store.settings.branch_name}
+                </div>
               </div>
-              <span
-                className={`font-bold text-slate-900 text-sm truncate ${
-                  sidebarCollapsed ? 'lg:hidden' : ''
-                }`}
-              >
-                ووش كير
-              </span>
             </div>
 
             <button
@@ -392,10 +392,10 @@ export function App() {
         />
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Content Area (Fixed Frame with Inner Scroll) */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-hidden">
         {/* Clean Top Header Bar */}
-        <header className="no-print h-14 bg-white/95 backdrop-blur-xs border-b border-slate-200/90 shadow-xs px-4 md:px-6 flex items-center justify-between gap-4 sticky top-0 z-20">
+        <header className="no-print h-14 shrink-0 bg-white/95 backdrop-blur-xs border-b border-slate-200/90 shadow-xs px-4 md:px-6 flex items-center justify-between gap-4 z-20">
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
@@ -416,7 +416,7 @@ export function App() {
               </button>
             )}
             <div className="flex items-center gap-2 text-xs min-w-0">
-              <span className="text-slate-500 hidden sm:inline truncate">
+              <span className="text-slate-600 font-semibold hidden sm:inline truncate">
                 {store.settings.business_name}
               </span>
               <span className="text-slate-300 hidden sm:inline" aria-hidden="true">
@@ -460,7 +460,8 @@ export function App() {
         </header>
 
         {/* Active Workspace Viewport */}
-        <main className="no-print flex-1 p-4 md:p-6 max-w-[1400px] w-full mx-auto">
+        <main className="no-print flex-1 min-h-0 overflow-y-auto p-4 md:p-6">
+          <div className="max-w-[1400px] w-full mx-auto">
           {store.syncError && activeTab !== 'database' && (
             <div className="mb-4 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-300 shadow-xs text-xs text-amber-900 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -628,7 +629,9 @@ export function App() {
                     </label>
                     <input
                       id="settings-passcode"
+                      name="settings-passcode"
                       type="password"
+                      autoComplete="current-password"
                       dir="ltr"
                       autoFocus
                       value={settingsPassInput}
@@ -693,6 +696,7 @@ export function App() {
                 }}
               />
             ))}
+          </div>
         </main>
       </div>
 

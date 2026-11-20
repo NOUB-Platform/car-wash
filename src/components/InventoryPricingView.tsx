@@ -298,7 +298,10 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2" />
                 <input
+                  id="inventory-search"
+                  name="inventory-search"
                   type="text"
+                  aria-label="بحث عن منتج أو SKU"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="بحث عن منتج أو SKU..."
@@ -317,9 +320,9 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[calc(100vh-315px)] min-h-[280px]">
               <table className="w-full text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
+                <thead className="bg-slate-100 border-b border-slate-200 text-[11px] text-slate-700 sticky top-0 z-10 shadow-[0_1px_0_0_#e2e8f0]">
                   <tr>
                     <th className="py-2.5 px-3 text-right font-semibold min-w-[200px] whitespace-nowrap">الكود والمنتج</th>
                     <th className="py-2.5 px-3 text-right font-semibold min-w-[130px] whitespace-nowrap">الماركة والتصنيف</th>
@@ -440,9 +443,9 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[calc(100vh-270px)] min-h-[280px]">
               <table className="w-full text-sm">
-                <thead className="bg-sky-50/80 border-b border-sky-200 text-xs text-slate-700">
+                <thead className="bg-sky-100 border-b border-sky-200 text-xs text-slate-800 sticky top-0 z-10 shadow-[0_1px_0_0_#bae6fd]">
                   <tr>
                     <th className="py-3 px-4 text-right font-semibold">الخدمة</th>
                     <th className="py-3 px-4 text-right font-semibold">التصنيف</th>
@@ -498,9 +501,9 @@ export const InventoryPricingView: React.FC<InventoryPricingViewProps> = ({
       {/* Sub-tab 3: Stock Movements Audit */}
       {subTab === 'movements' && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[calc(100vh-270px)] min-h-[280px]">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
+              <thead className="bg-slate-100 border-b border-slate-200 text-xs text-slate-700 sticky top-0 z-10 shadow-[0_1px_0_0_#e2e8f0]">
                 <tr>
                   <th className="py-3 px-4 text-right font-semibold">التاريخ</th>
                   <th className="py-3 px-4 text-right font-semibold">المنتج</th>
