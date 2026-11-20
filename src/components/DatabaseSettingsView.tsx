@@ -16,10 +16,15 @@ import schemaSql from '../../supabase/schema.sql?raw';
 import {
   clearSupabaseConfig,
   getSavedSupabaseConfig,
+  normalizeSupabaseUrl,
   saveSupabaseConfig,
   testSupabaseConnection,
 } from '../lib/supabaseClient';
 import { AppSettings } from '../types/carwash';
+
+const GRANT_FIX_SQL = `GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
 
 interface DatabaseSettingsViewProps {
   settings: AppSettings;
@@ -54,6 +59,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
   const [pushing, setPushing] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
+  const [copiedGrantSql, setCopiedGrantSql] = useState(false);
 
   // Settings local form
   const [businessName, setBusinessName] = useState(settings.business_name);
@@ -75,7 +81,9 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
     e.preventDefault();
     setTesting(true);
     setTestResult(null);
-    const config = { url: sbUrl.trim(), anonKey: sbKey.trim() };
+    const cleanUrl = normalizeSupabaseUrl(sbUrl);
+    setSbUrl(cleanUrl);
+    const config = { url: cleanUrl, anonKey: sbKey.trim() };
     const res = await testSupabaseConnection(config);
     setTestResult(res);
     if (res.ok) {
@@ -83,6 +91,12 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
       await onSyncSupabase();
     }
     setTesting(false);
+  };
+
+  const handleCopyGrantSql = async () => {
+    await navigator.clipboard.writeText(GRANT_FIX_SQL);
+    setCopiedGrantSql(true);
+    setTimeout(() => setCopiedGrantSql(false), 2500);
   };
 
   const handlePushLocalToSupabase = async () => {
@@ -258,8 +272,18 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
           )}
 
           {syncError && !testResult && (
-            <div className="p-3 rounded-lg text-xs border bg-amber-50 text-amber-800 border-amber-200">
-              {syncError}
+            <div className="p-3 rounded-lg text-xs border bg-amber-50 text-amber-800 border-amber-200 space-y-2">
+              <div>{syncError}</div>
+              {(syncError.includes('permission denied') || syncError.includes('GRANT')) && (
+                <button
+                  type="button"
+                  onClick={handleCopyGrantSql}
+                  className="px-2.5 py-1 rounded bg-amber-900 text-white text-[11px] font-semibold inline-flex items-center gap-1"
+                >
+                  {copiedGrantSql ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedGrantSql ? 'تم نسخ كود الصلاحيات' : 'نسخ كود إصلاح صلاحيات GRANT'}</span>
+                </button>
+              )}
             </div>
           )}
 

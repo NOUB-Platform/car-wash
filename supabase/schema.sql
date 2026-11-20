@@ -230,9 +230,14 @@ LEFT JOIN public.invoices inv_cr ON inv_cr.created_by_staff_id = s.id
 GROUP BY s.id, s.full_name, s.role, s.role_title_ar, s.commission_rate;
 
 -- ============================================================================
--- 11. سياسات الأمان (RLS) للتشغيل المباشر عبر Supabase Anon Key
+-- 11. صلاحيات الوصول وسياسات الأمان (GRANT + RLS) للتشغيل المباشر
 -- ملاحظة: يمكن تقييد هذه السياسات بـ authenticated عند تفعيل تسجيل الدخول لاحقاً
 -- ============================================================================
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO anon, authenticated;
+
 ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.staff ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wash_services ENABLE ROW LEVEL SECURITY;
@@ -252,7 +257,7 @@ BEGIN
   ]
   LOOP
     EXECUTE format('DROP POLICY IF EXISTS "allow_all_%s" ON public.%I', tbl, tbl);
-    EXECUTE format('CREATE POLICY "allow_all_%s" ON public.%I FOR ALL USING (true) WITH CHECK (true)', tbl, tbl);
+    EXECUTE format('CREATE POLICY "allow_all_%s" ON public.%I FOR ALL TO anon, authenticated USING (true) WITH CHECK (true)', tbl, tbl);
   END LOOP;
 END $$;
 
