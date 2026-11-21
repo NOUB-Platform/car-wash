@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import {
   Check,
+  Clock,
   Copy,
   Database,
   Download,
   Eye,
   EyeOff,
+  HardDriveDownload,
   Lock,
+  Palette,
   RefreshCw,
   RotateCcw,
   Shield,
+  Upload,
   UploadCloud,
 } from 'lucide-react';
 import schemaSql from '../../supabase/schema.sql?raw';
@@ -20,7 +24,9 @@ import {
   saveSupabaseConfig,
   testSupabaseConnection,
 } from '../lib/supabaseClient';
-import { AppSettings } from '../types/carwash';
+import { AppSettings, AppThemeId, BackupEntry } from '../types/carwash';
+import { playSoundEffect } from '../utils/feedback';
+import { formatDateTimeAr, THEME_OPTIONS } from '../utils/pricing';
 
 const GRANT_FIX_SQL = `GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated;
@@ -28,10 +34,13 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;`;
 
 interface DatabaseSettingsViewProps {
   settings: AppSettings;
+  backups: BackupEntry[];
   supabaseConnected: boolean;
   syncing: boolean;
   syncError: string | null;
   onUpdateSettings: (patch: Partial<AppSettings>) => Promise<void>;
+  onCreateBackup: (kind?: 'auto' | 'manual') => BackupEntry;
+  onRestoreBackup: (rawJson: string) => { ok: boolean; message: string };
   onSyncSupabase: () => Promise<boolean>;
   onPushToSupabase: () => Promise<{ ok: boolean; message: string }>;
   onResetDemoData: () => void;
@@ -40,10 +49,13 @@ interface DatabaseSettingsViewProps {
 
 export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
   settings,
+  backups,
   supabaseConnected,
   syncing,
   syncError,
   onUpdateSettings,
+  onCreateBackup,
+  onRestoreBackup,
   onSyncSupabase,
   onPushToSupabase,
   onResetDemoData,
@@ -60,6 +72,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
   const [showKey, setShowKey] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
   const [copiedGrantSql, setCopiedGrantSql] = useState(false);
+  const [backupMessage, setBackupMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   // Settings local form
   const [businessName, setBusinessName] = useState(settings.business_name);
@@ -76,6 +89,40 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
     setVatRate(settings.vat_rate);
     setPasscode(settings.access_passcode);
   }, [settings]);
+
+  const downloadBackupEntry = (entry: BackupEntry) => {
+    const blob = new Blob([entry.payload_json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `perfect_backup_${entry.created_at.slice(0, 16).replace(/[:T]/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleManualBackup = () => {
+    playSoundEffect('success');
+    const entry = onCreateBackup('manual');
+    downloadBackupEntry(entry);
+    setBackupMessage({
+      ok: true,
+      text: 'تم إنشاء نسخة احتياطية كاملة وحفظها محلياً وتنزيل ملف JSON بنجاح.',
+    });
+  };
+
+  const handleRestoreFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const content = String(reader.result || '');
+      const res = onRestoreBackup(content);
+      playSoundEffect(res.ok ? 'success' : 'error');
+      setBackupMessage({ ok: res.ok, text: res.message });
+    };
+    reader.readAsText(file, 'utf-8');
+    e.target.value = '';
+  };
 
   const handleTestAndSaveSupabase = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,7 +176,7 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'alahram_care_supabase_schema.sql';
+    a.download = 'perfect_supabase_schema.sql';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -477,6 +524,179 @@ export const DatabaseSettingsView: React.FC<DatabaseSettingsViewProps> = ({
             </button>
           </div>
         </form>
+      </div>
+
+      {/* Themes & Automatic 3-Hour Backup Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Multi-Theme & Color Selector */}
+        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <Palette className="w-5 h-5 text-blue-700" />
+            <div>
+              <h3 className="text-base font-bold text-slate-900">تعدد الألوان والثيمات</h3>
+              <p className="text-xs text-slate-500">
+                اختر مظهر النظام المفضل لتغيير ألوان الخلفية والقائمة الجانبية فوراً.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {THEME_OPTIONS.map((opt) => {
+              const active = (settings.theme || 'royal-blue') === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    playSoundEffect('click');
+                    onUpdateSettings({ theme: opt.id as AppThemeId });
+                  }}
+                  className={`p-3 rounded-xl border text-right flex items-center justify-between gap-2 transition-all ${
+                    active
+                      ? 'bg-sky-50 border-blue-600 ring-2 ring-blue-500/20 shadow-xs'
+                      : 'bg-slate-50/60 border-slate-200 hover:bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span
+                      className="w-6 h-6 rounded-lg border border-black/15 shrink-0"
+                      style={{ backgroundColor: opt.swatch }}
+                    />
+                    <span className="text-xs font-bold text-slate-800 truncate">
+                      {opt.label}
+                    </span>
+                  </div>
+                  {active && <Check className="w-4 h-4 text-blue-700 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Automatic 3-Hour Backup & Restore */}
+        <div className="lg:col-span-7 bg-emerald-50/55 border border-emerald-200 rounded-2xl shadow-sm p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <HardDriveDownload className="w-5 h-5 text-emerald-700" />
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  النسخ الاحتياطي التلقائي كل 3 ساعات والاستعادة
+                </h3>
+                <p className="text-xs text-slate-600">
+                  آخر نسخة محفوظة:{' '}
+                  <strong className="font-mono-num">
+                    {settings.last_backup_at
+                      ? formatDateTimeAr(settings.last_backup_at)
+                      : 'لم يتم أخذ نسخة بعد'}
+                  </strong>
+                </p>
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 text-xs font-bold text-slate-800 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={settings.auto_backup_enabled ?? true}
+                onChange={(e) =>
+                  onUpdateSettings({ auto_backup_enabled: e.target.checked })
+                }
+                className="w-4 h-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
+              />
+              <span>نسخ تلقائي كل 3 ساعات</span>
+            </label>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={handleManualBackup}
+              className="btn-sheen h-9 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs"
+            >
+              <Download className="w-4 h-4" />
+              <span>أخذ وتنزيل نسخة احتياطية الآن (JSON)</span>
+            </button>
+
+            <label className="h-9 px-4 rounded-xl border border-blue-200 bg-white hover:bg-blue-50 text-blue-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all">
+              <Upload className="w-4 h-4" />
+              <span>استعادة نسخة من ملف (.json)</span>
+              <input
+                type="file"
+                accept=".json,application/json"
+                onChange={handleRestoreFile}
+                className="sr-only"
+              />
+            </label>
+          </div>
+
+          {backupMessage && (
+            <div
+              className={`p-3 rounded-xl text-xs border ${
+                backupMessage.ok
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                  : 'bg-red-50 border-red-300 text-red-700'
+              }`}
+            >
+              {backupMessage.text}
+            </div>
+          )}
+
+          {/* Snapshots List */}
+          <div className="bg-white border border-emerald-200 rounded-xl overflow-hidden">
+            <div className="px-3.5 py-2 bg-emerald-100/60 border-b border-emerald-200 text-xs font-bold text-slate-800 flex items-center justify-between">
+              <span>سجل اللقطات الاحتياطية المحفوظة ({backups.length})</span>
+              <span className="text-[11px] font-normal text-slate-600">
+                يحتفظ بآخر 10 نسخ داخل المتصفح
+              </span>
+            </div>
+            <div className="divide-y divide-slate-200 max-h-44 overflow-y-auto">
+              {backups.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-500">
+                  لا توجد نسخ احتياطية مسجلة بعد — اضغط "أخذ وتنزيل نسخة" أو انتظر الدورة التلقائية.
+                </div>
+              ) : (
+                backups.map((b) => (
+                  <div
+                    key={b.id}
+                    className="px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs hover:bg-slate-50"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                        <span className="truncate">{b.summary}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                          {b.kind === 'auto' ? 'تلقائي' : 'يدوي'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-mono-num">
+                        {formatDateTimeAr(b.created_at)} · {b.size_kb} KB
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const res = onRestoreBackup(b.payload_json);
+                          playSoundEffect(res.ok ? 'success' : 'error');
+                          setBackupMessage({ ok: res.ok, text: res.message });
+                        }}
+                        className="px-2.5 py-1 rounded-lg border border-blue-200 bg-sky-50 hover:bg-blue-700 hover:text-white text-blue-700 text-[11px] font-bold transition-all"
+                      >
+                        استعادة
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadBackupEntry(b)}
+                        className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold transition-all"
+                      >
+                        تحميل
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Complete SQL Script Section */}

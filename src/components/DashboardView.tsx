@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
+  Award,
   CarFront,
   CheckCircle2,
   Clock,
@@ -11,29 +12,45 @@ import {
   Receipt,
   TrendingUp,
 } from 'lucide-react';
-import { Invoice, InvoiceStatus, Product, StaffMember } from '../types/carwash';
+import {
+  Invoice,
+  InvoiceStatus,
+  Product,
+  ShiftRecord,
+  StaffMember,
+  WalletAccount,
+} from '../types/carwash';
 import { playSoundEffect } from '../utils/feedback';
 import {
   formatDateTimeAr,
   formatEGP,
+  getPaymentMethodLabel,
   INVOICE_STATUS_LABELS,
-  PAYMENT_METHOD_LABELS,
+  roundMoney,
 } from '../utils/pricing';
 
 interface DashboardViewProps {
   invoices: Invoice[];
   products: Product[];
   staff: StaffMember[];
+  wallets: WalletAccount[];
+  currentOpenShift: ShiftRecord | null;
+  canViewProfits: boolean;
   onOpenPos: (mode: 'service' | 'retail') => void;
   onUpdateStatus: (invoiceId: string, status: InvoiceStatus) => void;
   onPreviewInvoice: (invoice: Invoice) => void;
-  onNavigateTab: (tab: 'inventory' | 'invoices' | 'staff') => void;
+  onNavigateTab: (
+    tab: 'inventory' | 'invoices' | 'staff' | 'reports' | 'shifts' | 'purchases' | 'parties'
+  ) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   invoices,
   products,
   staff,
+  wallets,
+  currentOpenShift,
+  canViewProfits,
   onOpenPos,
   onUpdateStatus,
   onPreviewInvoice,
@@ -49,6 +66,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const totalVat = active.reduce((s, i) => s + i.vat_amount, 0);
     const totalProfit = active.reduce((s, i) => s + i.net_profit, 0);
 
+    const itemProfitMap = new Map<
+      string,
+      { name: string; type: 'service' | 'product'; qty: number; revenue: number; profit: number }
+    >();
+    active.forEach((inv) => {
+      inv.items.forEach((it) => {
+        const key = `${it.item_type}:${it.product_id || it.service_id || it.item_name}`;
+        const prev = itemProfitMap.get(key) || {
+          name: it.item_name,
+          type: it.item_type,
+          qty: 0,
+          revenue: 0,
+          profit: 0,
+        };
+        const lineRev = it.line_total;
+        const lineCost = it.unit_cost * it.quantity;
+        prev.qty += it.quantity;
+        prev.revenue = roundMoney(prev.revenue + lineRev);
+        prev.profit = roundMoney(prev.profit + (lineRev - lineCost));
+        itemProfitMap.set(key, prev);
+      });
+    });
+
+    const rankedAll = Array.from(itemProfitMap.values()).sort((a, b) => b.profit - a.profit);
+    const rankedProducts = rankedAll.filter((x) => x.type === 'product');
+    const topProfitItem = rankedProducts[0] || rankedAll[0] || null;
+
     return {
       totalRevenue: serviceRevenue + retailRevenue,
       serviceRevenue,
@@ -57,6 +101,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       retailCount: retailInvs.length,
       totalVat,
       totalProfit,
+      topProfitItem,
     };
   }, [invoices]);
 
@@ -137,10 +182,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {formatEGP(stats.totalRevenue)}
           </div>
           <div className="text-[11px] text-stone-700 mt-1.5">
-            صافي الربح التقديري:{' '}
-            <span className="font-mono-num font-bold text-emerald-700">
-              {formatEGP(stats.totalProfit)}
-            </span>
+            {canViewProfits ? (
+              <>
+                صافي الربح التقديري:{' '}
+                <span className="font-mono-num font-bold text-emerald-700">
+                  {formatEGP(stats.totalProfit)}
+                </span>
+              </>
+            ) : (
+              <span>إجمالي فواتير اليوم المعتمدة</span>
+            )}
           </div>
         </div>
 
@@ -190,6 +241,70 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="text-[11px] text-orange-900/75 mt-1.5">
             مستحقة عن كافة الفواتير المعتمدة
           </div>
+        </div>
+      </div>
+
+      {/* Top Profitable Product + Active Shift Highlight Strip */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 text-amber-800 flex items-center justify-center shrink-0">
+              <Award className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-bold text-amber-900">
+                المنتج الأعلى ربحاً حتى الآن
+              </div>
+              <div className="text-sm font-bold text-slate-900 truncate">
+                {stats.topProfitItem ? stats.topProfitItem.name : 'لا توجد مبيعات مسجلة'}
+              </div>
+              {stats.topProfitItem && (
+                <div className="text-[11px] text-slate-600 font-mono-num">
+                  الكمية المباعة: {stats.topProfitItem.qty}
+                  {canViewProfits ? ` · صافي الربح: ${formatEGP(stats.topProfitItem.profit)}` : ''}
+                </div>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigateTab('reports')}
+            className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1 shrink-0"
+          >
+            <span>تقرير الأرباح</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="bg-indigo-50/75 border border-indigo-200 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-indigo-100 border border-indigo-300 text-indigo-800 flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-bold text-indigo-900">
+                حالة الوردية ومراجعة الدرج
+              </div>
+              <div className="text-sm font-bold text-slate-900 truncate">
+                {currentOpenShift
+                  ? `وردية مفتوحة (${currentOpenShift.shift_number}) · ${currentOpenShift.cashier_name}`
+                  : 'لا توجد وردية مفتوحة حالياً'}
+              </div>
+              {currentOpenShift && (
+                <div className="text-[11px] text-slate-600 font-mono-num">
+                  الرصيد النقدي المتوقع بالدرج: {formatEGP(currentOpenShift.expected_cash)}
+                </div>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigateTab('shifts')}
+            className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1 shrink-0"
+          >
+            <span>إدارة الورديات</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -410,7 +525,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     {getStaffName(inv.created_by_staff_id)}
                   </td>
                   <td className="py-2.5 px-3 text-xs text-slate-600 whitespace-nowrap">
-                    {PAYMENT_METHOD_LABELS[inv.payment_method]}
+                    {getPaymentMethodLabel(inv.payment_method, wallets)}
                   </td>
                   <td className="py-2.5 px-3 text-left font-mono-num text-slate-600 whitespace-nowrap">
                     {formatEGP(inv.vat_amount)}

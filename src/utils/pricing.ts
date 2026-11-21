@@ -1,11 +1,17 @@
 import {
+  AppThemeId,
   DiscountType,
+  ExpenseCategory,
   InvoiceStatus,
   PaymentMethod,
   PricingMode,
+  Product,
+  SaleTier,
+  StaffPermissions,
   StaffRole,
   StockMovementType,
   VehicleTier,
+  WalletAccount,
   WashService,
 } from '../types/carwash';
 
@@ -54,6 +60,24 @@ export function calculateProductSellingPrice(
     return roundMoney(cost + val);
   }
   return roundMoney(Math.max(0, Number(manualPrice ?? val) || 0));
+}
+
+export function getProductPriceForSaleTier(product: Product, tier: SaleTier): number {
+  if (tier === 'wholesale') {
+    return roundMoney(
+      product.wholesale_price && product.wholesale_price > 0
+        ? product.wholesale_price
+        : Math.max(product.cost_price, product.selling_price * 0.85)
+    );
+  }
+  if (tier === 'half_wholesale') {
+    return roundMoney(
+      product.half_wholesale_price && product.half_wholesale_price > 0
+        ? product.half_wholesale_price
+        : Math.max(product.cost_price, product.selling_price * 0.92)
+    );
+  }
+  return roundMoney(product.selling_price);
 }
 
 export function calculatePriceWithVat(preVatPrice: number, vatRate: number): number {
@@ -123,6 +147,12 @@ export const VEHICLE_TIER_LABELS: Record<VehicleTier, string> = {
   van: 'فان / ميكروباص',
 };
 
+export const SALE_TIER_LABELS: Record<SaleTier, string> = {
+  retail: 'قطاعي',
+  half_wholesale: 'نص جملة',
+  wholesale: 'جملة',
+};
+
 export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   pending: 'في الانتظار',
   washing: 'قيد التنفيذ',
@@ -131,12 +161,41 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   cancelled: 'ملغاة',
 };
 
-export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+export const BASE_PAYMENT_METHOD_LABELS: Record<
+  'cash' | 'card' | 'vodafone_cash' | 'instapay' | 'deferred',
+  string
+> = {
   cash: 'نقدي (كاش)',
   card: 'بطاقة بنكية (فيزا)',
   vodafone_cash: 'فودافون كاش',
   instapay: 'إنستاباي (InstaPay)',
+  deferred: 'آجل (على الحساب)',
 };
+
+// Backwards-compatible map for simple lookups
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  ...BASE_PAYMENT_METHOD_LABELS,
+};
+
+export function getPaymentMethodLabel(
+  method: PaymentMethod,
+  wallets: WalletAccount[] = []
+): string {
+  if (method.startsWith('wallet:')) {
+    const id = method.slice('wallet:'.length);
+    const w = wallets.find((item) => item.id === id);
+    return w ? `${w.name} (${w.provider})` : 'محفظة إلكترونية';
+  }
+  return BASE_PAYMENT_METHOD_LABELS[method as keyof typeof BASE_PAYMENT_METHOD_LABELS] || method;
+}
+
+export function isWalletPayment(method: PaymentMethod): boolean {
+  return (
+    method === 'vodafone_cash' ||
+    method === 'instapay' ||
+    method.startsWith('wallet:')
+  );
+}
 
 export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
   washer: 'فني غسيل سيارات',
@@ -146,12 +205,159 @@ export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
   supervisor: 'مشرف وردية ومدير',
 };
 
+export function getDefaultPermissionsForRole(role: StaffRole): StaffPermissions {
+  if (role === 'supervisor') {
+    return {
+      can_access_pos: true,
+      can_apply_discount: true,
+      can_sell_wholesale: true,
+      can_view_profits: true,
+      can_manage_inventory: true,
+      can_manage_purchases: true,
+      can_manage_expenses: true,
+      can_close_shift: true,
+      can_view_reports: true,
+      can_export_excel: true,
+      can_manage_settings: true,
+    };
+  }
+  if (role === 'inventory_manager') {
+    return {
+      can_access_pos: true,
+      can_apply_discount: false,
+      can_sell_wholesale: true,
+      can_view_profits: true,
+      can_manage_inventory: true,
+      can_manage_purchases: true,
+      can_manage_expenses: false,
+      can_close_shift: false,
+      can_view_reports: true,
+      can_export_excel: true,
+      can_manage_settings: false,
+    };
+  }
+  if (role === 'cashier') {
+    return {
+      can_access_pos: true,
+      can_apply_discount: true,
+      can_sell_wholesale: true,
+      can_view_profits: false,
+      can_manage_inventory: false,
+      can_manage_purchases: false,
+      can_manage_expenses: true,
+      can_close_shift: true,
+      can_view_reports: true,
+      can_export_excel: true,
+      can_manage_settings: false,
+    };
+  }
+  return {
+    can_access_pos: false,
+    can_apply_discount: false,
+    can_sell_wholesale: false,
+    can_view_profits: false,
+    can_manage_inventory: false,
+    can_manage_purchases: false,
+    can_manage_expenses: false,
+    can_close_shift: false,
+    can_view_reports: false,
+    can_export_excel: false,
+    can_manage_settings: false,
+  };
+}
+
+export const PERMISSION_LABELS: Record<keyof StaffPermissions, string> = {
+  can_access_pos: 'دخول نقطة البيع (الكاشير)',
+  can_apply_discount: 'منح خصومات على الفواتير',
+  can_sell_wholesale: 'البيع بسعر الجملة ونص الجملة',
+  can_view_profits: 'عرض التكلفة وصافي الأرباح',
+  can_manage_inventory: 'إدارة المخزن والأسعار والباركود',
+  can_manage_purchases: 'تسجيل المشتريات والموردين',
+  can_manage_expenses: 'تسجيل المصروفات النثرية',
+  can_close_shift: 'فتح وإغلاق ومراجعة الوردية',
+  can_view_reports: 'عرض مركز التقارير والأرباح',
+  can_export_excel: 'تصدير بيانات إكسيل (Excel)',
+  can_manage_settings: 'دخول الإعدادات والنسخ الاحتياطي',
+};
+
 export const STOCK_MOVEMENT_LABELS: Record<StockMovementType, string> = {
-  restock: 'توريد للمخزن',
+  restock: 'توريد / مشتريات للمخزن',
   sale: 'بيع منفرد (فاتورة)',
   wash_usage: 'استهلاك تشغيل مغسلة',
   adjustment: 'تسوية جرد',
 };
+
+export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
+  utilities: 'كهرباء ومياه وإنترنت',
+  rent: 'إيجار ومرافق',
+  maintenance: 'صيانة ماكينات ومعدات',
+  supplies: 'خامات ومستهلكات تشغيل',
+  hospitality: 'ضيافة وبوفيه ونثريات',
+  salaries: 'سلف ورواتب ومكافآت',
+  other: 'مصروفات نثرية أخرى',
+};
+
+export const THEME_OPTIONS: Array<{
+  id: AppThemeId;
+  label: string;
+  swatch: string;
+  bgCanvas: string;
+  sidebarFrom: string;
+  sidebarTo: string;
+  headerBg: string;
+  dark: boolean;
+}> = [
+  {
+    id: 'royal-blue',
+    label: 'أزرق سماوي (كلاسيكي)',
+    swatch: '#1D4ED8',
+    bgCanvas: '#EEF3F9',
+    sidebarFrom: '#E6F0FD',
+    sidebarTo: '#E2ECFB',
+    headerBg: 'rgba(255,255,255,0.95)',
+    dark: false,
+  },
+  {
+    id: 'emerald-mint',
+    label: 'زمردي نعناعي',
+    swatch: '#047857',
+    bgCanvas: '#ECFDF5',
+    sidebarFrom: '#D1FAE5',
+    sidebarTo: '#E0F2FE',
+    headerBg: 'rgba(255,255,255,0.95)',
+    dark: false,
+  },
+  {
+    id: 'warm-sand',
+    label: 'رملي دافئ (الأهرام)',
+    swatch: '#B45309',
+    bgCanvas: '#F8F4EE',
+    sidebarFrom: '#F3EAD8',
+    sidebarTo: '#EFE4CE',
+    headerBg: 'rgba(255,252,247,0.95)',
+    dark: false,
+  },
+  {
+    id: 'sunset-coral',
+    label: 'سلموني ناعم',
+    swatch: '#EA580C',
+    bgCanvas: '#FFF5F0',
+    sidebarFrom: '#FFEDD5',
+    sidebarTo: '#FFE4E6',
+    headerBg: 'rgba(255,255,255,0.95)',
+    dark: false,
+  },
+  {
+    id: 'slate-dark',
+    label: 'ليلي احترافي',
+    swatch: '#0F172A',
+    bgCanvas: '#E2E8F0',
+    sidebarFrom: '#1E293B',
+    sidebarTo: '#0F172A',
+    headerBg: 'rgba(248,250,252,0.95)',
+    dark: true,
+  },
+];
 
 export const WASH_BAYS = [
   'حارة الغسيل 1',

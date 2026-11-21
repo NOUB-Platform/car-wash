@@ -17,8 +17,10 @@ import {
   InvoiceType,
   PaymentMethod,
   Product,
+  SaleTier,
   StaffMember,
   VehicleTier,
+  WalletAccount,
   WashService,
 } from '../types/carwash';
 import { playSoundEffect } from '../utils/feedback';
@@ -26,8 +28,9 @@ import {
   calculateInvoiceTotals,
   calculatePriceWithVat,
   formatEGP,
+  getProductPriceForSaleTier,
   getServicePriceForTier,
-  PAYMENT_METHOD_LABELS,
+  SALE_TIER_LABELS,
   VEHICLE_TIER_LABELS,
   WASH_BAYS,
 } from '../utils/pricing';
@@ -39,7 +42,11 @@ interface PosViewProps {
   products: Product[];
   staff: StaffMember[];
   customers: Customer[];
+  wallets: WalletAccount[];
   vatRate: number;
+  defaultCashierId?: string;
+  canApplyDiscount: boolean;
+  canSellWholesale: boolean;
   onCreateInvoice: (payload: CreateInvoicePayload) => Promise<Invoice>;
   onInvoiceCreated: (invoice: Invoice) => void;
 }
@@ -62,11 +69,16 @@ export const PosView: React.FC<PosViewProps> = ({
   products,
   staff,
   customers,
+  wallets,
   vatRate,
+  defaultCashierId,
+  canApplyDiscount,
+  canSellWholesale,
   onCreateInvoice,
   onInvoiceCreated,
 }) => {
   const [mode, setMode] = useState<InvoiceType>(initialMode);
+  const [saleTier, setSaleTier] = useState<SaleTier>('retail');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('الكل');
 
@@ -122,8 +134,25 @@ export const PosView: React.FC<PosViewProps> = ({
     sellers[0]?.id || staff[0]?.id || ''
   );
   const [createdByCashierId, setCreatedByCashierId] = useState<string>(
-    cashiers[0]?.id || staff[1]?.id || staff[0]?.id || ''
+    defaultCashierId || cashiers[0]?.id || staff[1]?.id || staff[0]?.id || ''
   );
+
+  const paymentOptions = useMemo(() => {
+    const list: Array<{ value: PaymentMethod; label: string }> = [
+      { value: 'cash', label: 'نقدي (كاش)' },
+      { value: 'card', label: 'بطاقة بنكية (فيزا)' },
+    ];
+    wallets
+      .filter((w) => w.is_active)
+      .forEach((w) => {
+        list.push({
+          value: `wallet:${w.id}`,
+          label: `${w.name} (${w.provider})`,
+        });
+      });
+    list.push({ value: 'deferred', label: 'آجل (على الحساب)' });
+    return list;
+  }, [wallets]);
 
   const activeCart = mode === 'service' ? serviceCart : retailCart;
   const setActiveCart = mode === 'service' ? setServiceCart : setRetailCart;
@@ -192,6 +221,27 @@ export const PosView: React.FC<PosViewProps> = ({
     );
   };
 
+  const handleSaleTierChange = (nextTier: SaleTier) => {
+    if (nextTier !== 'retail' && !canSellWholesale) {
+      playSoundEffect('error');
+      setFormError('ليس لديك صلاحية البيع بسعر الجملة أو نص الجملة.');
+      return;
+    }
+    playSoundEffect('click');
+    setFormError(null);
+    setSaleTier(nextTier);
+    setRetailCart((prev) =>
+      prev.map((entry) => {
+        const prod = products.find((p) => p.id === entry.product_id);
+        if (!prod) return entry;
+        return {
+          ...entry,
+          unit_price: getProductPriceForSaleTier(prod, nextTier),
+        };
+      })
+    );
+  };
+
   // Multi-select checkbox toggle for wash services
   const toggleServiceSelection = (svc: WashService) => {
     playSoundEffect('click');
@@ -227,6 +277,7 @@ export const PosView: React.FC<PosViewProps> = ({
       return;
     }
     playSoundEffect('click');
+    const unitPrice = getProductPriceForSaleTier(prod, saleTier);
     setRetailCart((prev) => {
       const exists = prev.some((i) => i.product_id === prod.id);
       if (exists) {
@@ -240,7 +291,7 @@ export const PosView: React.FC<PosViewProps> = ({
           product_id: prod.id,
           item_name: prod.name_ar,
           unit_cost: prod.cost_price,
-          unit_price: prod.selling_price,
+          unit_price: unitPrice,
           quantity: 1,
           max_stock: prod.stock_qty,
         },
@@ -309,10 +360,16 @@ export const PosView: React.FC<PosViewProps> = ({
       return;
     }
 
+    if (paymentMethod === 'deferred' && !selectedCustomerId && !customerName.trim()) {
+      setFormError('للدفع الآجل (على الحساب)، يرجى اختيار عميل مسجل أو إدخال اسم العميل.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const created = await onCreateInvoice({
         invoice_type: mode,
+        sale_tier: mode === 'retail' ? saleTier : 'retail',
         payment_method: paymentMethod,
         customer_id: selectedCustomerId || null,
         save_customer: !selectedCustomerId && saveCustomer && Boolean(customerName.trim()),
@@ -327,8 +384,8 @@ export const PosView: React.FC<PosViewProps> = ({
         created_by_staff_id: createdByCashierId,
         performed_by_staff_id:
           mode === 'service' ? performedByWasherId : performedBySellerId,
-        discount_type: discountType,
-        discount_value: discountValue,
+        discount_type: canApplyDiscount ? discountType : 'none',
+        discount_value: canApplyDiscount ? discountValue : 0,
         notes: notes.trim() || undefined,
         items: activeCart.map((c) => ({
           item_type: c.item_type,
@@ -413,7 +470,7 @@ export const PosView: React.FC<PosViewProps> = ({
         {/* Multi-Select Checklist Catalog (7 cols) */}
         <div className="lg:col-span-7 space-y-3.5">
           {/* Vehicle Tier Selector when in Service Mode */}
-          {mode === 'service' && (
+          {mode === 'service' ? (
             <div className="bg-sky-50/85 border border-sky-200 rounded-2xl p-3.5 shadow-sm">
               <div className="text-xs font-bold text-slate-800 mb-2">
                 1. فئة السيارة (تتحدث الأسعار تلقائياً):
@@ -433,6 +490,41 @@ export const PosView: React.FC<PosViewProps> = ({
                     {VEHICLE_TIER_LABELS[tier]}
                   </button>
                 ))}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-emerald-50/85 border border-emerald-200 rounded-2xl p-3.5 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-800">
+                  1. فئة تسعير البيع (تتحدث الأسعار تلقائياً):
+                </span>
+                {!canSellWholesale && (
+                  <span className="text-[11px] font-semibold text-amber-700">
+                    صلاحية قطاعي فقط
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {(['retail', 'half_wholesale', 'wholesale'] as SaleTier[]).map((tier) => {
+                  const locked = tier !== 'retail' && !canSellWholesale;
+                  return (
+                    <button
+                      key={tier}
+                      type="button"
+                      disabled={locked}
+                      onClick={() => handleSaleTierChange(tier)}
+                      className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition-all whitespace-nowrap ${
+                        saleTier === tier
+                          ? 'bg-emerald-700 text-white border-emerald-800 shadow-md ring-2 ring-emerald-500/25'
+                          : locked
+                          ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                          : 'bg-white/90 text-emerald-800 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-400 shadow-xs'
+                      }`}
+                    >
+                      {SALE_TIER_LABELS[tier]}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -557,7 +649,8 @@ export const PosView: React.FC<PosViewProps> = ({
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {filteredProducts.map((prod) => {
-                  const priceVat = calculatePriceWithVat(prod.selling_price, vatRate);
+                  const tierPrice = getProductPriceForSaleTier(prod, saleTier);
+                  const priceVat = calculatePriceWithVat(tierPrice, vatRate);
                   const outOfStock = prod.stock_qty <= 0;
                   const cartItem = retailCart.find((i) => i.product_id === prod.id);
                   const isSelected = Boolean(cartItem);
@@ -608,7 +701,7 @@ export const PosView: React.FC<PosViewProps> = ({
 
                       <div className="text-left shrink-0">
                         <div className="text-xs font-bold text-emerald-700 font-mono-num">
-                          {formatEGP(prod.selling_price)}
+                          {formatEGP(tierPrice)}
                         </div>
                         <div className="text-[10px] text-slate-500 font-mono-num">
                           +{vatRate}%: {formatEGP(priceVat)}
@@ -917,18 +1010,19 @@ export const PosView: React.FC<PosViewProps> = ({
                   htmlFor="pos-discount-type"
                   className="block text-[10px] font-semibold text-slate-600 mb-1"
                 >
-                  الخصم
+                  الخصم {!canApplyDiscount && '(مقفل)'}
                 </label>
                 <select
                   id="pos-discount-type"
                   name="pos-discount-type"
-                  value={discountType}
+                  disabled={!canApplyDiscount}
+                  value={canApplyDiscount ? discountType : 'none'}
                   onChange={(e) => {
                     const next = e.target.value as DiscountType;
                     setDiscountType(next);
                     if (next === 'none') setDiscountValue(0);
                   }}
-                  className="w-full h-8 px-2 rounded-lg border border-slate-200 text-xs bg-white"
+                  className="w-full h-8 px-2 rounded-lg border border-slate-200 text-xs bg-white disabled:bg-slate-100"
                 >
                   <option value="none">بدون خصم</option>
                   <option value="percent">نسبة %</option>
@@ -948,8 +1042,8 @@ export const PosView: React.FC<PosViewProps> = ({
                   type="number"
                   min={0}
                   step="any"
-                  disabled={discountType === 'none'}
-                  value={discountType === 'none' ? 0 : discountValue}
+                  disabled={!canApplyDiscount || discountType === 'none'}
+                  value={!canApplyDiscount || discountType === 'none' ? 0 : discountValue}
                   onChange={(e) => setDiscountValue(Number(e.target.value) || 0)}
                   className="w-full h-8 px-2 rounded-lg border border-slate-200 text-xs font-mono-num disabled:bg-slate-100"
                 />
@@ -968,9 +1062,9 @@ export const PosView: React.FC<PosViewProps> = ({
                   onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
                   className="w-full h-8 px-2 rounded-lg border border-slate-200 text-xs bg-white"
                 >
-                  {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((pm) => (
-                    <option key={pm} value={pm}>
-                      {PAYMENT_METHOD_LABELS[pm]}
+                  {paymentOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
                     </option>
                   ))}
                 </select>

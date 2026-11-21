@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { ArrowRight, CarFront, Package, Printer, X } from 'lucide-react';
-import { AppSettings, Invoice, StaffMember } from '../types/carwash';
+import { AppSettings, Invoice, StaffMember, WalletAccount } from '../types/carwash';
 import { BrandLogo } from './BrandLogo';
 import {
   formatDateTimeAr,
   formatEGP,
+  getPaymentMethodLabel,
   INVOICE_STATUS_LABELS,
-  PAYMENT_METHOD_LABELS,
+  SALE_TIER_LABELS,
   VEHICLE_TIER_LABELS,
 } from '../utils/pricing';
 
@@ -14,6 +15,7 @@ interface InvoicePrintModalProps {
   invoice: Invoice;
   settings: AppSettings;
   staff: StaffMember[];
+  wallets: WalletAccount[];
   onClose: () => void;
 }
 
@@ -21,6 +23,7 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
   invoice,
   settings,
   staff,
+  wallets,
   onClose,
 }) => {
   const isService = invoice.invoice_type === 'service';
@@ -122,7 +125,7 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                 >
                   {isService
                     ? 'فاتورة خدمات غسيل وعناية بالسيارات'
-                    : 'فاتورة مبيعات منتجات ومستلزمات سيارات'}
+                    : `فاتورة مبيعات منتجات (${SALE_TIER_LABELS[invoice.sale_tier || 'retail']})`}
                 </p>
                 <h2 className="text-lg font-bold text-slate-900">{settings.business_name}</h2>
                 <p className="text-[11px] text-slate-600 mt-0.5">
@@ -153,7 +156,7 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({
                 </div>
               )}
               <div className="text-slate-600">
-                الدفع: {PAYMENT_METHOD_LABELS[invoice.payment_method]} · الحالة:{' '}
+                الدفع: {getPaymentMethodLabel(invoice.payment_method, wallets)} · الحالة:{' '}
                 {INVOICE_STATUS_LABELS[invoice.status]}
               </div>
             </div>

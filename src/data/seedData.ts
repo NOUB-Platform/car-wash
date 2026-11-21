@@ -1,27 +1,40 @@
 import {
   AppSettings,
   Customer,
+  Expense,
   Invoice,
+  PartyPayment,
+  PayrollPayout,
   Product,
+  PurchaseOrder,
+  ShiftRecord,
   StaffMember,
   StockMovement,
+  Supplier,
+  WalletAccount,
   WashService,
 } from '../types/carwash';
+import { getDefaultPermissionsForRole, roundMoney } from '../utils/pricing';
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3600 * 1000).toISOString();
 const minsAgo = (m: number) => new Date(Date.now() - m * 60 * 1000).toISOString();
 
 export const INITIAL_SETTINGS: AppSettings = {
   id: 'default',
-  business_name: 'الأهرام كير',
+  business_name: 'بيرفكت | Perfect',
   branch_name: 'أول شارع الهرم، الجيزة',
   tax_registration_no: '412-889-301',
   vat_rate: 14,
   access_passcode: '12345678',
   address: 'أول شارع الهرم، الجيزة',
   phone: '01000000000',
-  receipt_footer_service: 'شكراً لاختياركم الأهرام كير. يرجى فحص السيارة قبل المغادرة.',
-  receipt_footer_retail: 'الاستبدال أو الاسترجاع خلال 14 يوماً بأصل الفاتورة والعبوة بحالتها الأصلية.',
+  receipt_footer_service:
+    'شكراً لاختياركم مغسلة بيرفكت (Perfect). يرجى فحص السيارة قبل المغادرة.',
+  receipt_footer_retail:
+    'الاستبدال أو الاسترجاع خلال 14 يوماً بأصل الفاتورة والعبوة بحالتها الأصلية.',
+  theme: 'royal-blue',
+  auto_backup_enabled: true,
+  last_backup_at: hoursAgo(1),
 };
 
 export const INITIAL_STAFF: StaffMember[] = [
@@ -34,6 +47,7 @@ export const INITIAL_STAFF: StaffMember[] = [
     commission_rate: 10,
     base_salary: 6500,
     is_active: true,
+    permissions: getDefaultPermissionsForRole('washer'),
     notes: 'مسؤول حارة الغسيل 1 والغسيل الكيماوي',
     created_at: hoursAgo(720),
   },
@@ -46,6 +60,7 @@ export const INITIAL_STAFF: StaffMember[] = [
     commission_rate: 2,
     base_salary: 7500,
     is_active: true,
+    permissions: getDefaultPermissionsForRole('cashier'),
     notes: 'إصدار فواتير الخدمات والمبيعات واستلام النقدية',
     created_at: hoursAgo(720),
   },
@@ -58,6 +73,7 @@ export const INITIAL_STAFF: StaffMember[] = [
     commission_rate: 8,
     base_salary: 5800,
     is_active: true,
+    permissions: getDefaultPermissionsForRole('washer'),
     notes: 'مسؤول حارة الغسيل 2 والغسيل السريع',
     created_at: hoursAgo(600),
   },
@@ -70,6 +86,7 @@ export const INITIAL_STAFF: StaffMember[] = [
     commission_rate: 12,
     base_salary: 8200,
     is_active: true,
+    permissions: getDefaultPermissionsForRole('detailer'),
     notes: 'مسؤول حارة التلميع وحماية الطلاء',
     created_at: hoursAgo(650),
   },
@@ -82,6 +99,7 @@ export const INITIAL_STAFF: StaffMember[] = [
     commission_rate: 3,
     base_salary: 7000,
     is_active: true,
+    permissions: getDefaultPermissionsForRole('inventory_manager'),
     notes: 'إدارة المخزن وتسعير المنتجات وبيع القطع المنفردة',
     created_at: hoursAgo(500),
   },
@@ -94,7 +112,8 @@ export const INITIAL_STAFF: StaffMember[] = [
     commission_rate: 0,
     base_salary: 11000,
     is_active: true,
-    notes: 'إشراف عام ومراجعة جودة التسليم',
+    permissions: getDefaultPermissionsForRole('supervisor'),
+    notes: 'إشراف عام ومراجعة جودة التسليم والصلاحيات الكاملة',
     created_at: hoursAgo(900),
   },
 ];
@@ -214,8 +233,22 @@ export const INITIAL_SERVICES: WashService[] = [
   },
 ];
 
+const withTiers = (
+  prod: Omit<Product, 'half_wholesale_price' | 'wholesale_price' | 'warehouse_name' | 'barcode'>
+): Product => ({
+  ...prod,
+  barcode: prod.sku,
+  warehouse_name: 'المخزن الرئيسي - الهرم',
+  half_wholesale_price: roundMoney(
+    Math.max(prod.cost_price + 5, prod.selling_price * 0.92)
+  ),
+  wholesale_price: roundMoney(
+    Math.max(prod.cost_price + 2, prod.selling_price * 0.85)
+  ),
+});
+
 export const INITIAL_PRODUCTS: Product[] = [
-  {
+  withTiers({
     id: '33333333-3333-3333-3333-333333333301',
     sku: 'PRD-DRY-500',
     name_ar: 'سبراي غسيل جاف سريع 500 مل',
@@ -233,8 +266,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: false,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
-  {
+  }),
+  withTiers({
     id: '33333333-3333-3333-3333-333333333302',
     sku: 'PRD-DSH-400',
     name_ar: 'ملمع تابلوه مطفي فانيليا 400 مل',
@@ -252,8 +285,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: true,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
-  {
+  }),
+  withTiers({
     id: '33333333-3333-3333-3333-333333333303',
     sku: 'PRD-TIR-500',
     name_ar: 'جل تلميع وحماية الإطارات 500 مل',
@@ -271,8 +304,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: true,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
-  {
+  }),
+  withTiers({
     id: '33333333-3333-3333-3333-333333333304',
     sku: 'PRD-FOM-1000',
     name_ar: 'فوم غسيل سيارات مركز 1 لتر',
@@ -290,8 +323,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: true,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
-  {
+  }),
+  withTiers({
     id: '33333333-3333-3333-3333-333333333305',
     sku: 'PRD-MCF-3PK',
     name_ar: 'طقم فوط مايكروفايبر 3 قطع (800 GSM)',
@@ -309,8 +342,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: true,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
-  {
+  }),
+  withTiers({
     id: '33333333-3333-3333-3333-333333333306',
     sku: 'PRD-PRF-OUD',
     name_ar: 'معطر سيارة فاخر (عود وعنبر)',
@@ -328,8 +361,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: false,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
-  {
+  }),
+  withTiers({
     id: '33333333-3333-3333-3333-333333333307',
     sku: 'PRD-SCR-250',
     name_ar: 'معجون مزيل خدوش الطلاء 250 جم',
@@ -347,8 +380,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: true,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
-  {
+  }),
+  withTiers({
     id: '33333333-3333-3333-3333-333333333308',
     sku: 'PRD-RIM-500',
     name_ar: 'منظف جنوط ومزيل برادة الفرامل 500 مل',
@@ -366,8 +399,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: true,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
-  {
+  }),
+  withTiers({
     id: '33333333-3333-3333-3333-333333333309',
     sku: 'PRD-WAX-1000',
     name_ar: 'شامبو واكس لغسيل السيارات 1 لتر',
@@ -385,8 +418,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: true,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
-  {
+  }),
+  withTiers({
     id: '33333333-3333-3333-3333-333333333310',
     sku: 'PRD-SPG-2X',
     name_ar: 'إسفنجة غسيل ناعمة مزدوجة الوجه',
@@ -404,7 +437,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     is_consumable: true,
     vat_applicable: true,
     created_at: hoursAgo(500),
-  },
+  }),
 ];
 
 export const INITIAL_CUSTOMERS: Customer[] = [
@@ -415,6 +448,7 @@ export const INITIAL_CUSTOMERS: Customer[] = [
     car_model: 'هيونداي توسان 2024',
     car_plate: 'أ ب ج 4821',
     vehicle_tier: 'suv',
+    opening_balance: 0,
     created_at: hoursAgo(300),
   },
   {
@@ -424,6 +458,7 @@ export const INITIAL_CUSTOMERS: Customer[] = [
     car_model: 'مرسيدس C180 2023',
     car_plate: 'س ص ط 915',
     vehicle_tier: 'sedan',
+    opening_balance: 0,
     created_at: hoursAgo(280),
   },
   {
@@ -433,6 +468,7 @@ export const INITIAL_CUSTOMERS: Customer[] = [
     car_model: 'تويوتا فورتشنر 2022',
     car_plate: 'ق م ن 3307',
     vehicle_tier: '4x4',
+    opening_balance: 0,
     created_at: hoursAgo(240),
   },
   {
@@ -442,6 +478,8 @@ export const INITIAL_CUSTOMERS: Customer[] = [
     car_model: 'كيا سيراتو 2021',
     car_plate: 'د هـ و 7124',
     vehicle_tier: 'sedan',
+    opening_balance: 250,
+    notes: 'عميل جملة وخدمات آجل',
     created_at: hoursAgo(200),
   },
   {
@@ -451,7 +489,71 @@ export const INITIAL_CUSTOMERS: Customer[] = [
     car_model: 'نيسان قشقاي 2023',
     car_plate: 'ع ف غ 604',
     vehicle_tier: 'suv',
+    opening_balance: 0,
     created_at: hoursAgo(120),
+  },
+];
+
+export const INITIAL_SUPPLIERS: Supplier[] = [
+  {
+    id: '88888888-8888-8888-8888-888888888801',
+    name: 'شركة النيل لتجارة الكيماويات',
+    phone: '01000000021',
+    company_name: 'النيل أوتو كيميكالز',
+    address: 'المنطقة الصناعية - 6 أكتوبر',
+    opening_balance: 1500,
+    notes: 'مورد سونكس وتيرتل واكس الرئيسي',
+    created_at: hoursAgo(600),
+  },
+  {
+    id: '88888888-8888-8888-8888-888888888802',
+    name: 'المتحدة لمستلزمات السيارات',
+    phone: '01000000022',
+    company_name: 'المتحدة جروب',
+    address: 'التوفيقية - وسط البلد',
+    opening_balance: 0,
+    notes: 'توريد شامبو وفوم وملمعات ميجوايرز ومافرا',
+    created_at: hoursAgo(500),
+  },
+  {
+    id: '88888888-8888-8888-8888-888888888803',
+    name: 'الفتح للاستيراد والتصدير',
+    phone: '01000000023',
+    company_name: 'الفتح التجارية',
+    address: 'فيصل - الجيزة',
+    opening_balance: 0,
+    notes: 'معطرات أريون وفوط مايكروفايبر',
+    created_at: hoursAgo(450),
+  },
+];
+
+export const INITIAL_WALLETS: WalletAccount[] = [
+  {
+    id: '99999999-9999-9999-9999-999999999901',
+    name: 'محفظة فودافون كاش - الفرع',
+    provider: 'Vodafone Cash',
+    account_number: '01000000090',
+    current_balance: 1850,
+    is_active: true,
+    created_at: hoursAgo(700),
+  },
+  {
+    id: '99999999-9999-9999-9999-999999999902',
+    name: 'حساب إنستاباي - بيرفكت',
+    provider: 'InstaPay',
+    account_number: 'perfect@instapay',
+    current_balance: 2450,
+    is_active: true,
+    created_at: hoursAgo(700),
+  },
+  {
+    id: '99999999-9999-9999-9999-999999999903',
+    name: 'محفظة اتصالات كاش',
+    provider: 'Etisalat Cash',
+    account_number: '01100000091',
+    current_balance: 420,
+    is_active: true,
+    created_at: hoursAgo(400),
   },
 ];
 
@@ -460,8 +562,10 @@ export const INITIAL_INVOICES: Invoice[] = [
     id: '55555555-5555-5555-5555-555555555501',
     invoice_number: 'SRV-2026-0001',
     invoice_type: 'service',
+    sale_tier: 'retail',
     status: 'completed',
     payment_method: 'cash',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111101',
     customer_id: '44444444-4444-4444-4444-444444444401',
     customer_name: 'حسام الدين إبراهيم',
     customer_phone: '01000000011',
@@ -469,8 +573,8 @@ export const INITIAL_INVOICES: Invoice[] = [
     car_plate: 'أ ب ج 4821',
     vehicle_tier: 'suv',
     wash_bay: 'حارة الغسيل 1',
-    created_by_staff_id: '11111111-1111-1111-1111-111111111102', // محمود كمال
-    performed_by_staff_id: '11111111-1111-1111-1111-111111111101', // أحمد مجدي
+    created_by_staff_id: '11111111-1111-1111-1111-111111111102',
+    performed_by_staff_id: '11111111-1111-1111-1111-111111111101',
     completed_by_staff_id: '11111111-1111-1111-1111-111111111102',
     subtotal: 490,
     discount_type: 'none',
@@ -480,11 +584,12 @@ export const INITIAL_INVOICES: Invoice[] = [
     vat_rate: 14,
     vat_amount: 68.6,
     total_amount: 558.6,
+    paid_amount: 558.6,
     total_cost: 65,
     net_profit: 425,
     notes: 'أحمد مجدي قام بالغسيل الشامل ومحرك البخار - تسليم ممتاز',
-    created_at: hoursAgo(4),
-    completed_at: hoursAgo(3),
+    created_at: hoursAgo(12),
+    completed_at: hoursAgo(11),
     items: [
       {
         id: '66666666-6666-6666-6666-666666666601',
@@ -516,13 +621,15 @@ export const INITIAL_INVOICES: Invoice[] = [
     id: '55555555-5555-5555-5555-555555555502',
     invoice_number: 'RTL-2026-0001',
     invoice_type: 'retail',
+    sale_tier: 'retail',
     status: 'completed',
     payment_method: 'card',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111101',
     customer_id: '44444444-4444-4444-4444-444444444402',
     customer_name: 'رامي عبد الرحمن',
     customer_phone: '01000000012',
-    created_by_staff_id: '11111111-1111-1111-1111-111111111102', // محمود كمال
-    performed_by_staff_id: '11111111-1111-1111-1111-111111111105', // يوسف طارق
+    created_by_staff_id: '11111111-1111-1111-1111-111111111102',
+    performed_by_staff_id: '11111111-1111-1111-1111-111111111105',
     completed_by_staff_id: '11111111-1111-1111-1111-111111111102',
     subtotal: 528,
     discount_type: 'none',
@@ -532,11 +639,12 @@ export const INITIAL_INVOICES: Invoice[] = [
     vat_rate: 14,
     vat_amount: 73.92,
     total_amount: 601.92,
+    paid_amount: 601.92,
     total_cost: 390,
     net_profit: 138,
     notes: 'بيع منفرد: سبراي غسيل جاف + ملمع تابلوه بدون غسيل',
-    created_at: hoursAgo(3),
-    completed_at: hoursAgo(3),
+    created_at: hoursAgo(10),
+    completed_at: hoursAgo(10),
     items: [
       {
         id: '66666666-6666-6666-6666-666666666603',
@@ -568,8 +676,10 @@ export const INITIAL_INVOICES: Invoice[] = [
     id: '55555555-5555-5555-5555-555555555503',
     invoice_number: 'SRV-2026-0002',
     invoice_type: 'service',
+    sale_tier: 'retail',
     status: 'washing',
     payment_method: 'instapay',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111102',
     customer_id: '44444444-4444-4444-4444-444444444403',
     customer_name: 'شريف محمد نبيل',
     customer_phone: '01000000013',
@@ -577,8 +687,8 @@ export const INITIAL_INVOICES: Invoice[] = [
     car_plate: 'ق م ن 3307',
     vehicle_tier: '4x4',
     wash_bay: 'حارة التلميع 3',
-    created_by_staff_id: '11111111-1111-1111-1111-111111111102', // محمود كمال
-    performed_by_staff_id: '11111111-1111-1111-1111-111111111104', // مصطفى حسن
+    created_by_staff_id: '11111111-1111-1111-1111-111111111102',
+    performed_by_staff_id: '11111111-1111-1111-1111-111111111104',
     completed_by_staff_id: null,
     subtotal: 890,
     discount_type: 'percent',
@@ -588,6 +698,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     vat_rate: 14,
     vat_amount: 112.14,
     total_amount: 913.14,
+    paid_amount: 913.14,
     total_cost: 140,
     net_profit: 661,
     notes: 'خصم 10% عميل دائم - قيد التلميع الشمعي والغسيل',
@@ -624,8 +735,10 @@ export const INITIAL_INVOICES: Invoice[] = [
     id: '55555555-5555-5555-5555-555555555504',
     invoice_number: 'SRV-2026-0003',
     invoice_type: 'service',
+    sale_tier: 'retail',
     status: 'ready',
     payment_method: 'cash',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111102',
     customer_id: '44444444-4444-4444-4444-444444444404',
     customer_name: 'أحمد سليم',
     customer_phone: '01000000014',
@@ -633,8 +746,8 @@ export const INITIAL_INVOICES: Invoice[] = [
     car_plate: 'د هـ و 7124',
     vehicle_tier: 'sedan',
     wash_bay: 'حارة الغسيل 1',
-    created_by_staff_id: '11111111-1111-1111-1111-111111111106', // طارق المنشاوي
-    performed_by_staff_id: '11111111-1111-1111-1111-111111111101', // أحمد مجدي
+    created_by_staff_id: '11111111-1111-1111-1111-111111111106',
+    performed_by_staff_id: '11111111-1111-1111-1111-111111111101',
     completed_by_staff_id: null,
     subtotal: 220,
     discount_type: 'none',
@@ -644,6 +757,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     vat_rate: 14,
     vat_amount: 30.8,
     total_amount: 250.8,
+    paid_amount: 250.8,
     total_cost: 30,
     net_profit: 190,
     notes: 'جاهزة للتسليم بعد غسيل شامل بواسطة أحمد مجدي',
@@ -668,11 +782,13 @@ export const INITIAL_INVOICES: Invoice[] = [
     id: '55555555-5555-5555-5555-555555555505',
     invoice_number: 'RTL-2026-0002',
     invoice_type: 'retail',
+    sale_tier: 'retail',
     status: 'completed',
     payment_method: 'vodafone_cash',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111102',
     customer_name: 'عميل نقدي - بيع سريع',
     customer_phone: '01000000000',
-    created_by_staff_id: '11111111-1111-1111-1111-111111111105', // يوسف طارق
+    created_by_staff_id: '11111111-1111-1111-1111-111111111105',
     performed_by_staff_id: '11111111-1111-1111-1111-111111111105',
     completed_by_staff_id: '11111111-1111-1111-1111-111111111105',
     subtotal: 344,
@@ -683,6 +799,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     vat_rate: 14,
     vat_amount: 45.36,
     total_amount: 369.36,
+    paid_amount: 369.36,
     total_cost: 235,
     net_profit: 89,
     notes: 'شراء جل إطارات + معطر عود',
@@ -719,8 +836,10 @@ export const INITIAL_INVOICES: Invoice[] = [
     id: '55555555-5555-5555-5555-555555555506',
     invoice_number: 'SRV-2026-0004',
     invoice_type: 'service',
+    sale_tier: 'retail',
     status: 'pending',
     payment_method: 'cash',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111102',
     customer_id: '44444444-4444-4444-4444-444444444405',
     customer_name: 'وليد فؤاد',
     customer_phone: '01000000015',
@@ -728,8 +847,8 @@ export const INITIAL_INVOICES: Invoice[] = [
     car_plate: 'ع ف غ 604',
     vehicle_tier: 'suv',
     wash_bay: 'حارة الغسيل 2',
-    created_by_staff_id: '11111111-1111-1111-1111-111111111102', // محمود كمال
-    performed_by_staff_id: '11111111-1111-1111-1111-111111111103', // كريم عادل
+    created_by_staff_id: '11111111-1111-1111-1111-111111111102',
+    performed_by_staff_id: '11111111-1111-1111-1111-111111111103',
     completed_by_staff_id: null,
     subtotal: 340,
     discount_type: 'none',
@@ -739,6 +858,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     vat_rate: 14,
     vat_amount: 47.6,
     total_amount: 387.6,
+    paid_amount: 387.6,
     total_cost: 45,
     net_profit: 295,
     notes: 'غسيل خارجي + تعقيم أوزون',
@@ -770,6 +890,147 @@ export const INITIAL_INVOICES: Invoice[] = [
         line_total: 190,
       },
     ],
+  },
+];
+
+export const INITIAL_PURCHASES: PurchaseOrder[] = [
+  {
+    id: 'bbbb1111-1111-1111-1111-111111111101',
+    purchase_number: 'PUR-2026-0001',
+    supplier_id: '88888888-8888-8888-8888-888888888801',
+    supplier_name: 'شركة النيل لتجارة الكيماويات',
+    payment_method: 'deferred',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111101',
+    created_by_staff_id: '11111111-1111-1111-1111-111111111105',
+    subtotal: 3400,
+    vat_amount: 0,
+    total_amount: 3400,
+    paid_amount: 0,
+    notes: 'توريد دفعة منظفات سونكس وتيرتل واكس بالأجل',
+    created_at: hoursAgo(20),
+    items: [
+      {
+        id: 'cccc1111-1111-1111-1111-111111111101',
+        purchase_id: 'bbbb1111-1111-1111-1111-111111111101',
+        product_id: '33333333-3333-3333-3333-333333333301',
+        product_name: 'سبراي غسيل جاف سريع 500 مل',
+        quantity: 10,
+        unit_cost: 180,
+        line_total: 1800,
+      },
+      {
+        id: 'cccc1111-1111-1111-1111-111111111102',
+        purchase_id: 'bbbb1111-1111-1111-1111-111111111101',
+        product_id: '33333333-3333-3333-3333-333333333303',
+        product_name: 'جل تلميع وحماية الإطارات 500 مل',
+        quantity: 10,
+        unit_cost: 160,
+        line_total: 1600,
+      },
+    ],
+  },
+];
+
+export const INITIAL_EXPENSES: Expense[] = [
+  {
+    id: 'dddd1111-1111-1111-1111-111111111101',
+    expense_number: 'EXP-2026-0001',
+    category: 'hospitality',
+    title: 'ضيافة ومشروبات للعملاء والموظفين',
+    amount: 145,
+    payment_method: 'cash',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111102',
+    staff_id: '11111111-1111-1111-1111-111111111102',
+    notes: 'بوفيه الوردية الصباحية',
+    created_at: hoursAgo(3),
+  },
+  {
+    id: 'dddd1111-1111-1111-1111-111111111102',
+    expense_number: 'EXP-2026-0002',
+    category: 'maintenance',
+    title: 'صيانة وصلة مسدس ضغط المياه حارة 1',
+    amount: 220,
+    payment_method: 'cash',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111101',
+    staff_id: '11111111-1111-1111-1111-111111111106',
+    notes: 'تغيير جلدة وكابل ضغط عالي',
+    created_at: hoursAgo(14),
+  },
+];
+
+export const INITIAL_PARTY_PAYMENTS: PartyPayment[] = [
+  {
+    id: 'eeee1111-1111-1111-1111-111111111101',
+    party_type: 'supplier',
+    party_id: '88888888-8888-8888-8888-888888888801',
+    party_name: 'شركة النيل لتجارة الكيماويات',
+    amount: 1000,
+    payment_method: 'cash',
+    shift_id: 'aaaa1111-1111-1111-1111-111111111101',
+    staff_id: '11111111-1111-1111-1111-111111111106',
+    notes: 'سداد دفعة تحت الحساب من فاتورة التوريد',
+    created_at: hoursAgo(13),
+  },
+];
+
+export const INITIAL_SHIFTS: ShiftRecord[] = [
+  {
+    id: 'aaaa1111-1111-1111-1111-111111111102',
+    shift_number: 'SHF-2026-0002',
+    cashier_staff_id: '11111111-1111-1111-1111-111111111102',
+    cashier_name: 'محمود كمال',
+    status: 'open',
+    opened_at: hoursAgo(5),
+    opening_cash: 1500,
+    cash_sales: 638.4,
+    wallet_sales: 1282.5,
+    card_sales: 0,
+    deferred_sales: 0,
+    cash_purchases: 0,
+    cash_expenses: 145,
+    customer_cash_collections: 0,
+    supplier_cash_payments: 0,
+    expected_cash: 1993.4,
+    notes: 'الوردية الحالية - أول شارع الهرم',
+  },
+  {
+    id: 'aaaa1111-1111-1111-1111-111111111101',
+    shift_number: 'SHF-2026-0001',
+    cashier_staff_id: '11111111-1111-1111-1111-111111111106',
+    cashier_name: 'طارق المنشاوي',
+    status: 'closed',
+    opened_at: hoursAgo(24),
+    closed_at: hoursAgo(6),
+    opening_cash: 2000,
+    cash_sales: 558.6,
+    wallet_sales: 0,
+    card_sales: 601.92,
+    deferred_sales: 0,
+    cash_purchases: 0,
+    cash_expenses: 220,
+    customer_cash_collections: 0,
+    supplier_cash_payments: 1000,
+    expected_cash: 1338.6,
+    actual_cash: 1338.6,
+    variance: 0,
+    notes: 'وردية أمس — تسليم الدرج مطابق 100%',
+  },
+];
+
+export const INITIAL_PAYROLL: PayrollPayout[] = [
+  {
+    id: 'ffff1111-1111-1111-1111-111111111101',
+    staff_id: '11111111-1111-1111-1111-111111111101',
+    staff_name: 'أحمد مجدي',
+    month_label: 'الشهر السابق',
+    base_salary: 6500,
+    commission_amount: 840,
+    bonuses: 300,
+    deductions: 0,
+    net_paid: 7640,
+    payment_method: 'cash',
+    notes: 'صرف راتب + عمولات + حافز تميز',
+    created_at: hoursAgo(240),
   },
 ];
 

@@ -1,16 +1,28 @@
 import React, { useMemo, useState } from 'react';
-import { CarFront, Package, Printer, Search } from 'lucide-react';
-import { Invoice, InvoiceStatus, InvoiceType, StaffMember } from '../types/carwash';
+import { CarFront, FileSpreadsheet, Package, Printer, Search } from 'lucide-react';
+import {
+  Invoice,
+  InvoiceStatus,
+  InvoiceType,
+  StaffMember,
+  WalletAccount,
+} from '../types/carwash';
+import { exportToExcelXls } from '../utils/excelExport';
+import { playSoundEffect } from '../utils/feedback';
 import {
   formatDateTimeAr,
   formatEGP,
+  getPaymentMethodLabel,
   INVOICE_STATUS_LABELS,
-  PAYMENT_METHOD_LABELS,
+  SALE_TIER_LABELS,
 } from '../utils/pricing';
 
 interface InvoicesLedgerViewProps {
   invoices: Invoice[];
   staff: StaffMember[];
+  wallets: WalletAccount[];
+  canViewProfits: boolean;
+  canExportExcel: boolean;
   onPreviewInvoice: (invoice: Invoice) => void;
   onUpdateStatus: (invoiceId: string, status: InvoiceStatus) => void;
 }
@@ -18,6 +30,9 @@ interface InvoicesLedgerViewProps {
 export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
   invoices,
   staff,
+  wallets,
+  canViewProfits,
+  canExportExcel,
   onPreviewInvoice,
   onUpdateStatus,
 }) => {
@@ -65,11 +80,42 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
     <div className="space-y-5">
       {/* Header & Unmistakable Folder-Tab Strip */}
       <div className="bg-white/95 border border-slate-200 rounded-2xl shadow-sm pt-3.5 px-4 overflow-hidden">
-        <div className="pb-3">
-          <h2 className="text-lg font-bold text-slate-900">سجل الفواتير والطباعة</h2>
-          <p className="text-xs text-slate-600 mt-0.5">
-            فصل واضح بين فواتير خدمات الغسيل وفواتير بيع المنتجات مع تتبع الكاشير والفني.
-          </p>
+        <div className="pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">سجل الفواتير والطباعة</h2>
+            <p className="text-xs text-slate-600 mt-0.5">
+              فصل واضح بين فواتير خدمات الغسيل وفواتير بيع المنتجات مع تتبع الكاشير والفني ونوع البيع.
+            </p>
+          </div>
+          {canExportExcel && (
+            <button
+              type="button"
+              onClick={() => {
+                playSoundEffect('click');
+                exportToExcelXls({
+                  filename: 'perfect_invoices_ledger',
+                  sheetTitle: 'سجل الفواتير والمبيعات',
+                  columns: [
+                    { header: 'رقم الفاتورة', value: (r) => r.invoice_number },
+                    { header: 'التاريخ', value: (r) => formatDateTimeAr(r.created_at) },
+                    { header: 'النوع', value: (r) => (r.invoice_type === 'service' ? 'غسيل' : 'منتجات') },
+                    { header: 'فئة البيع', value: (r) => SALE_TIER_LABELS[r.sale_tier || 'retail'] },
+                    { header: 'العميل', value: (r) => r.customer_name },
+                    { header: 'طريقة الدفع', value: (r) => getPaymentMethodLabel(r.payment_method, wallets) },
+                    { header: 'الحالة', value: (r) => INVOICE_STATUS_LABELS[r.status] },
+                    { header: 'الضريبة 14%', value: (r) => r.vat_amount },
+                    { header: 'الإجمالي', value: (r) => r.total_amount },
+                  ],
+                  rows: filtered,
+                  footerNote: `عدد الفواتير: ${summary.count} · الإجمالي: ${formatEGP(summary.total)}`,
+                });
+              }}
+              className="self-start sm:self-auto px-3.5 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-700 hover:text-white text-emerald-800 text-xs font-bold flex items-center gap-1.5 transition-all"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>تصدير إكسيل</span>
+            </button>
+          )}
         </div>
 
         <div
@@ -150,12 +196,14 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
             <span className="text-slate-600">الإجمالي: </span>
             <strong className="font-mono-num text-blue-800">{formatEGP(summary.total)}</strong>
           </div>
-          <div>
-            <span className="text-slate-600">صافي الربح: </span>
-            <strong className="font-mono-num text-emerald-700">
-              {formatEGP(summary.profit)}
-            </strong>
-          </div>
+          {canViewProfits && (
+            <div>
+              <span className="text-slate-600">صافي الربح: </span>
+              <strong className="font-mono-num text-emerald-700">
+                {formatEGP(summary.profit)}
+              </strong>
+            </div>
+          )}
         </div>
       </div>
 
@@ -200,10 +248,12 @@ export const InvoicesLedgerView: React.FC<InvoicesLedgerViewProps> = ({
                           inv.invoice_type === 'service' ? 'text-blue-700' : 'text-emerald-700'
                         }`}
                       >
-                        {inv.invoice_type === 'service' ? 'خدمات غسيل' : 'مبيعات منتجات'}
+                        {inv.invoice_type === 'service'
+                          ? 'خدمات غسيل'
+                          : `مبيعات (${SALE_TIER_LABELS[inv.sale_tier || 'retail']})`}
                       </span>
                       <div className="text-[11px] text-slate-500">
-                        {PAYMENT_METHOD_LABELS[inv.payment_method]}
+                        {getPaymentMethodLabel(inv.payment_method, wallets)}
                       </div>
                     </td>
                     <td className="py-2.5 px-3 min-w-[200px]">
